@@ -161,6 +161,49 @@ export async function generateStoryboard(script: string): Promise<string> {
   return result.response.text();
 }
 
+const PLATFORM_PROMPTS: Record<string, string> = {
+  kling:
+    "You are a Kling AI prompt expert. Transform the idea below into a detailed prompt optimized for Kling AI video generation. Focus on cinematic camera moves, tracking shots, consistent character motion, and realistic 1080p text-to-video output. Include visual style, lighting, color palette, and camera positioning.",
+  runway:
+    "You are a Runway prompt expert. Transform the idea below into a detailed prompt optimized for Runway Gen-3 and Gen-4. Focus on cinematographic direction, volumetric lighting, color-grading cues, camera angles, and visual effects. Include atmosphere, texture details, and motion style.",
+  seedance:
+    "You are a Seedance prompt expert. Transform the idea below into a detailed prompt optimized for ByteDance Seedance. Focus on shot-by-shot framing, smooth multi-shot motion, stable subjects, and native cinematic framing. Include scene transitions and temporal coherence.",
+  veo: "You are a Veo 3 prompt expert. Transform the idea below into a detailed prompt optimized for Google Veo 3. Include scene descriptions, camera movements, and synchronized audio cues — dialogue, sound effects, and music. Leverage Veo 3's native sound generation capabilities.",
+  storyboard:
+    "You are a storyboard expert. Transform the script or idea below into a scene-by-scene storyboard breakdown. For each scene, describe the shot type, camera angle, composition, action, and key visual elements. Format each scene clearly.",
+};
+
+export async function generatePlatformPrompt(
+  description: string,
+  platform: string
+): Promise<string> {
+  const key = getApiKey();
+  const genAI = new GoogleGenerativeAI(key);
+
+  const systemText =
+    PLATFORM_PROMPTS[platform] ||
+    "You are an expert prompt engineer. Transform the idea below into a detailed, well-crafted prompt for AI video generation. Focus on visual style, camera movements, lighting, mood, and composition.";
+
+  const systemInstruction: Content = {
+    role: "user",
+    parts: [{ text: systemText }],
+  };
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
+
+  const result = await model.generateContent({
+    contents: [
+      {
+        role: "user",
+        parts: [
+          { text: `User's idea:\n${description}\n\nGenerate a single, detailed prompt (no explanations, no prefixes):` },
+        ],
+      },
+    ],
+  });
+
+  return result.response.text();
+}
+
 export async function analyzeYouTube(ctx: YouTubeContext): Promise<string> {
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);

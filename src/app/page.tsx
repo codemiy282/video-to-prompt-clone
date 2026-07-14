@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   IconVideo,
@@ -29,6 +29,59 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState("");
   const [activeAccordion, setActiveAccordion] = useState<string | null>("time-saving");
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function postPrompt(body: FormData) {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setCopied(false);
+    try {
+      const res = await fetch("/api/generate-prompt", { method: "POST", body });
+      const data = await res.json();
+      if (data.success) {
+        setResult(data.prompt);
+      } else {
+        setError(data.error?.message || "Request failed.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleUrlSubmit() {
+    const fd = new FormData();
+    fd.append("type", "video");
+    fd.append("url", videoUrl);
+    void postPrompt(fd);
+  }
+
+  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const fd = new FormData();
+    fd.append("file", f);
+    fd.append("type", activeTab);
+    void postPrompt(fd);
+    e.target.value = "";
+  }
+
+  async function handleCopy() {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(result);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable; ignore.
+    }
+  }
 
   const benefits = [
     {
@@ -132,7 +185,8 @@ export default function Home() {
                 </div>
                 <button
                   type="button"
-                  disabled={!videoUrl}
+                  disabled={!videoUrl || loading}
+                  onClick={handleUrlSubmit}
                   className="group inline-flex shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all outline-none h-12 px-6 hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
                   <IconPlayerPlayFilled className="size-4 mr-2" />
@@ -144,15 +198,59 @@ export default function Home() {
               <div className="my-6">
                 <button
                   type="button"
-                  className="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed px-3 py-12 text-center transition-all border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/10 cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                  className="flex w-full flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed px-3 py-12 text-center transition-all border-muted-foreground/30 hover:border-muted-foreground/50 hover:bg-muted/10 cursor-pointer disabled:opacity-60"
                 >
                   <IconUpload className="mb-3 size-11 text-muted-foreground" />
-                  <h3 className="font-semibold text-lg text-foreground">Or upload a video file</h3>
+                  <h3 className="font-semibold text-lg text-foreground">
+                    {loading ? "Analyzing…" : "Or upload a video file"}
+                  </h3>
                   <p className="mx-auto max-w-md text-muted-foreground text-sm leading-7">
                     Supports MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP, and MOV files up to 20 MB
                   </p>
                 </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="video/*,image/*"
+                  className="hidden"
+                  onChange={handleFileSelected}
+                />
               </div>
+
+              {loading && (
+                <div className="mx-auto mb-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <span className="size-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
+                  Generating your prompt…
+                </div>
+              )}
+
+              {error && (
+                <div className="mx-auto mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              )}
+
+              {result && (
+                <div className="mx-auto mb-4 rounded-2xl border border-border bg-card p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="font-semibold text-foreground">Generated Prompt</h3>
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-muted/50 cursor-pointer"
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <textarea
+                    readOnly
+                    value={result}
+                    className="h-40 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -290,7 +388,7 @@ export default function Home() {
           <div className="text-center">
             <p className="font-semibold text-primary text-sm uppercase tracking-wider">Impressive Facts</p>
             <h2 className="mt-3 font-bold text-3xl sm:text-4xl text-foreground">Why Choose Video to Prompt?</h2>
-            <p className="mt-3 text-muted-foreground">Key highlights of Video to Prompt's services</p>
+            <p className="mt-3 text-muted-foreground">Key highlights of Video to Prompt&apos;s services</p>
           </div>
 
           <div className="mt-12 grid gap-8 text-center sm:grid-cols-3">

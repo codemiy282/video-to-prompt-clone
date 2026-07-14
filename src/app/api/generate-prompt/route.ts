@@ -8,6 +8,7 @@
 import {
   analyzeFile,
   analyzeYouTube,
+  generatePlatformPrompt,
   generateStoryboard,
   GeminiConfigError,
   MODEL,
@@ -117,8 +118,13 @@ export async function POST(request: Request): Promise<Response> {
       return successResponse(prompt, detectedType, MODEL);
     }
 
-    // 3c) Free-text mode (e.g. storyboard scripts).
+    // 3c) Free-text mode with optional platform.
     if (typeof text === "string" && text.trim().length > 0) {
+      const platform = form.get("platform");
+      if (typeof platform === "string" && platform.trim().length > 0 && platform !== "storyboard") {
+        const prompt = await generatePlatformPrompt(text, platform);
+        return successResponse(prompt, "text", MODEL);
+      }
       const prompt = await generateStoryboard(text);
       return successResponse(prompt, "text", MODEL);
     }

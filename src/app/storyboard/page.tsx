@@ -1,32 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { IconLayoutGrid } from "@tabler/icons-react";
+import { IconLayoutGrid, IconLoader2, IconCopy, IconCheck } from "@tabler/icons-react";
 
 export default function Storyboard() {
-  const [script, setScript] = useState("");
+  const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   async function handleGenerate() {
-    if (!script.trim()) return;
+    if (!text.trim()) return;
     setLoading(true);
     setError(null);
     setResult(null);
-    setCopied(false);
     try {
       const fd = new FormData();
-      fd.append("type", "text");
-      fd.append("text", script);
+      fd.append("text", text.trim());
       const res = await fetch("/api/generate-prompt", { method: "POST", body: fd });
       const data = await res.json();
-      if (data.success) {
-        setResult(data.prompt);
-      } else {
-        setError(data.error?.message || "Request failed.");
-      }
+      if (data.success) setResult(data.prompt);
+      else setError(data.error?.message || "Request failed.");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -36,13 +31,9 @@ export default function Storyboard() {
 
   async function handleCopy() {
     if (!result) return;
-    try {
-      await navigator.clipboard.writeText(result);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard may be unavailable; ignore.
-    }
+    await navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -62,8 +53,8 @@ export default function Storyboard() {
             <div className="mx-auto w-full max-w-2xl">
               <div className="my-6">
                 <textarea
-                  value={script}
-                  onChange={(e) => setScript(e.target.value)}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
                   placeholder="Describe your story or script here..."
                   className="w-full h-32 rounded-lg bg-transparent border-2 border-border p-3 text-sm focus:border-primary text-foreground resize-none outline-none"
                 />
@@ -72,48 +63,36 @@ export default function Storyboard() {
               <div className="flex justify-center mt-6">
                 <button
                   type="button"
+                  disabled={!text.trim() || loading}
                   onClick={handleGenerate}
-                  disabled={!script.trim() || loading}
                   className="group inline-flex shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all h-12 px-8 hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
-                  <IconLayoutGrid className="size-4 mr-2" />
-                  {loading ? "Generating…" : "Generate Storyboard"}
+                  {loading ? <IconLoader2 className="size-4 mr-2 animate-spin" /> : <IconLayoutGrid className="size-4 mr-2" />}
+                  {loading ? "Generating..." : "Generate Storyboard"}
                 </button>
               </div>
-
-              {loading && (
-                <div className="mx-auto mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <span className="size-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
-                  Generating your storyboard…
-                </div>
-              )}
-
-              {error && (
-                <div className="mx-auto mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </div>
-              )}
-
-              {result && (
-                <div className="mx-auto mt-4 rounded-2xl border border-border bg-card p-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground">Storyboard</h3>
-                    <button
-                      type="button"
-                      onClick={handleCopy}
-                      className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-muted/50 cursor-pointer"
-                    >
-                      {copied ? "Copied!" : "Copy"}
-                    </button>
-                  </div>
-                  <textarea
-                    readOnly
-                    value={result}
-                    className="h-64 w-full resize-none rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none"
-                  />
-                </div>
-              )}
             </div>
+
+            {error && (
+              <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-red-600 dark:text-red-400">
+                <p className="font-medium">Error</p>
+                <p className="mt-1 text-sm">{error}</p>
+              </div>
+            )}
+            {result && (
+              <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-border bg-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-lg text-foreground">Storyboard</h3>
+                  <button
+                    onClick={handleCopy}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    {copied ? <><IconCheck className="size-4 text-green-500" /> Copied</> : <><IconCopy className="size-4" /> Copy</>}
+                  </button>
+                </div>
+                <p className="text-foreground text-sm leading-relaxed whitespace-pre-wrap">{result}</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -12,36 +12,44 @@ goals:
   - id: G-CONTRACT-001
     title: Define API and Error Contracts
     phase: PHASE-01
-    status: READY
+    status: CLOSED
     dependencies:
       - G-ROADMAP-001
     execution_type: specification
     description: Formulate request/response schemas for video analysis, YouTube URLs, and standardized error shapes.
+    evidence:
+      - reports/G-CONTRACT-001/final-goal-report.md
 
   - id: G-NOTIFY-001
     title: Implement Gemini API File Handler
     phase: PHASE-02
-    status: DRAFT
+    status: CLOSED
     dependencies:
       - G-CONTRACT-001
     execution_type: implementation
     description: Implement multipart form parsing, local file staging, Gemini File API upload, and content generation.
+    evidence:
+      - reports/G-NOTIFY-001/final-goal-report.md
 
   - id: G-YOUTUBE-001
     title: Implement YouTube Context Extractor
     phase: PHASE-02
-    status: DRAFT
+    status: CLOSED
     dependencies:
       - G-CONTRACT-001
     execution_type: implementation
     description: Extract video details/transcripts from YouTube/Shorts links and construct prompts for Gemini analysis.
+    evidence:
+      - reports/G-YOUTUBE-001/final-goal-report.md
 
   - id: G-INTEGRATE-001
     title: Expose API Endpoint and Connect Frontend
     phase: PHASE-03
-    status: DRAFT
+    status: CLOSED
     dependencies:
       - G-NOTIFY-001
       - G-YOUTUBE-001
     execution_type: integration
     description: Connect UI submit triggers to next-generation API routes and implement copy-to-clipboard evidence verification.
+    evidence:
+      - reports/G-INTEGRATE-001/final-goal-report.md

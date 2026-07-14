@@ -34,7 +34,7 @@ The system operates as a single-tenant Next.js application.
                        v                      v
 +----------------------+----------------------+-------------+
 |                   Google Gemini AI Model                  |
-|  - Model: gemini-1.5-flash                                |
+|  - Model: gemini-2.5-flash                                |
 |  - Goal: Synthesize highly descriptive video prompt       |
 +-----------------------------------------------------------+
 ```

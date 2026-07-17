@@ -1,0 +1,20 @@
+# Dependencies / build output
+node_modules
+.next
+out
+
+# Git / env (secrets must never enter the build context)
+.git
+.env*
+!.env.example
+
+# Python caches & local venv
+**/__pycache__
+backend/venv
+
+# Project meta / docs not needed at runtime
+reports
+docs
+.claude
+*.tsbuildinfo
+next-env.d.ts

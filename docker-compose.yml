@@ -1,0 +1,46 @@
+# Deploy the full app on a GPU VPS.
+#
+# Prereqs on the host:
+#   - Docker + Docker Compose v2.3+
+#   - NVIDIA Container Toolkit (https://docs.nvidia.com/datacenter/cloud-native/)
+#   - A `.env` file (copy from .env.example) with GEMINI_API_KEY set
+#
+# Build & run:
+#   docker compose --env-file .env up -d --build
+#
+# Frontend:  http://localhost:3000
+# Backend:   http://localhost:8000/health
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Read at runtime by the Next.js server (server-side API routes).
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # Inside the compose network the backend is reachable by service name.
+      LTX_VIDEO_BACKEND_URL: http://ltx-backend:8000
+    depends_on:
+      - ltx-backend
+    restart: unless-stopped
+
+  ltx-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+    # GPU passthrough — requires the NVIDIA Container Toolkit.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped

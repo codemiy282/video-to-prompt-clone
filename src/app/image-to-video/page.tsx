@@ -23,6 +23,7 @@ interface GenerationResponse {
   success: boolean;
   video_base64?: string;
   video_url?: string;
+  title?: string;
   error?: string;
   message?: string;
 }
@@ -31,6 +32,7 @@ export default function ImageToVideo() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [videoTitle, setVideoTitle] = useState<string | null>(null);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -52,6 +54,7 @@ export default function ImageToVideo() {
     setGenerating(true);
     setError(null);
     setResult(null);
+    setVideoTitle(null);
     setVideoBlob(null);
     setProgress("Sending request to server...");
 
@@ -89,8 +92,13 @@ export default function ImageToVideo() {
         return;
       }
 
-      // Convert base64 to blob
-      if (data.video_base64) {
+      // Ưu tiên video_url (dummy service trả link trực tiếp)
+      if (data.video_url) {
+        setResult(data.video_url);
+        setVideoTitle(data.title ?? null);
+        setProgress("");
+      } else if (data.video_base64) {
+        // Fallback: base64 (giữ tương thích luồng cũ)
         const binaryString = atob(data.video_base64);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -142,7 +150,11 @@ export default function ImageToVideo() {
   }
 
   function handleDownload() {
-    if (!videoBlob) return;
+    // Trường hợp video_url (dummy): mở/tải trực tiếp từ link.
+    if (!videoBlob) {
+      if (result) window.open(result, "_blank");
+      return;
+    }
 
     const url = URL.createObjectURL(videoBlob);
     const a = document.createElement("a");
@@ -305,7 +317,7 @@ export default function ImageToVideo() {
                 <div className="mx-auto mt-4 max-w-2xl rounded-2xl border border-border bg-card p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">
-                      Generated Video
+                      {videoTitle ? `Generated Video · ${videoTitle}` : "Generated Video"}
                     </h3>
                     <button
                       type="button"
@@ -328,10 +340,11 @@ export default function ImageToVideo() {
                   />
 
                   <div className="text-xs text-muted-foreground">
-                    <p>
-                      💾 Size:{" "}
-                      {videoBlob ? `${(videoBlob.size / (1024 * 1024)).toFixed(2)} MB` : "N/A"}
-                    </p>
+                    {videoBlob && (
+                      <p>
+                        💾 Size: {(videoBlob.size / (1024 * 1024)).toFixed(2)} MB
+                      </p>
+                    )}
                     <p>⏱️ Duration: {Math.round((numFrames / 30) * 10) / 10}s</p>
                   </div>
                 </div>

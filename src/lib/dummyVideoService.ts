@@ -189,9 +189,10 @@ const GOOGLE_VIDEOS: DummyVideo[] = [
   },
 ];
 
-// Mặc định bao gồm Google (hoạt động trên VPS/mạng mở).
-// Đặt DUMMY_INCLUDE_GOOGLE=false để chỉ dùng nhóm reachable (an toàn tuyệt đối).
-const INCLUDE_GOOGLE = process.env.DUMMY_INCLUDE_GOOGLE !== "false";
+// MẶC ĐỊNH: CHỈ dùng nhóm reachable (luôn phát được, không phụ thuộc Google).
+// Bật nhóm Google (chủ đề xe/sci-fi/city/people...) bằng env DUMMY_INCLUDE_GOOGLE=true
+// CHỈ KHI mạng của bạn tới được Google Cloud Storage (bị chặn ở nhiều nơi -> 403).
+const INCLUDE_GOOGLE = process.env.DUMMY_INCLUDE_GOOGLE === "true";
 
 export const DUMMY_VIDEOS: DummyVideo[] = INCLUDE_GOOGLE
   ? [...REACHABLE_VIDEOS, ...GOOGLE_VIDEOS]

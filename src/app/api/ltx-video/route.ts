@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getRandomVideo, getAllVideos } from "@/lib/dummyVideoService";
+import { searchPexelsVideo } from "@/lib/pexelsVideoService";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ interface GenerationResponse {
   success: boolean;
   video_url?: string;
   title?: string;
+  source?: "pexels" | "pool";
   error?: string;
   message?: string;
 }
@@ -56,17 +58,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // 3. Chọn video random (ưu tiên khớp keyword prompt nếu có).
-    const video = getRandomVideo(prompt);
+    // 3. Ưu tiên Pexels (video stock khớp prompt) nếu có PEXELS_API_KEY;
+    //    nếu không dùng được -> fallback về pool tĩnh (khớp keyword nếu có).
+    const pexels = await searchPexelsVideo(prompt);
+    const video = pexels ?? getRandomVideo(prompt);
+    const source = pexels ? "pexels" : "pool";
 
     console.log(
-      `[dummy-video] image=${file.name} prompt="${prompt.slice(0, 60)}" -> ${video.title}`
+      `[image-to-video:${source}] image=${file.name} prompt="${prompt.slice(0, 60)}" -> ${video.title}`
     );
 
     return NextResponse.json(
       {
         success: true,
-        message: "Dummy video selected",
+        message: source === "pexels" ? "Pexels video selected" : "Dummy video selected",
+        source,
         video_url: video.url,
         title: video.title,
       } as GenerationResponse,

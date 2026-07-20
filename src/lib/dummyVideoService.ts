@@ -28,95 +28,118 @@ const GTV = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample";
 const TV = "https://test-videos.co.uk/vids";
 
 // ---- Host xác nhận truy cập được (200) từ môi trường hạn chế ----
+// Tag vocabulary được mở rộng (nhiều từ đồng nghĩa) để prompt khớp được nhiều
+// hơn — VD prompt "a hare hopping in the woods at sunrise" vẫn khớp Big Buck
+// Bunny nhờ các tag hare/woods/sunny. Tất cả URL dưới đây đã verify trả 200 và
+// là clip NGẮN (10s–1 phút), hợp cho preview.
 const REACHABLE_VIDEOS: DummyVideo[] = [
-  // test-videos.co.uk
+  // --- Big Buck Bunny (rabbit / forest / cartoon) ---
   {
     url: `${TV}/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4`,
     title: "Big Buck Bunny (360p)",
-    tags: ["animal", "rabbit", "bunny", "nature", "forest", "cartoon", "animation", "cute", "funny"],
+    tags: ["animal", "rabbit", "bunny", "hare", "nature", "forest", "woods", "tree", "meadow", "grass", "cartoon", "animation", "cute", "funny", "comedy", "colorful", "sunny", "day", "cinematic"],
   },
   {
     url: `${TV}/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4`,
     title: "Big Buck Bunny (720p)",
-    tags: ["animal", "rabbit", "bunny", "nature", "forest", "cartoon", "animation", "cute", "funny"],
+    tags: ["animal", "rabbit", "bunny", "hare", "nature", "forest", "woods", "tree", "meadow", "grass", "cartoon", "animation", "cute", "funny", "comedy", "colorful", "sunny", "day", "cinematic"],
   },
   {
     url: `${TV}/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_2MB.mp4`,
     title: "Big Buck Bunny (1080p)",
-    tags: ["animal", "rabbit", "bunny", "nature", "forest", "cartoon", "animation", "cute", "funny"],
+    tags: ["animal", "rabbit", "bunny", "hare", "nature", "forest", "woods", "tree", "meadow", "grass", "cartoon", "animation", "cute", "funny", "comedy", "colorful", "sunny", "day", "cinematic"],
   },
+
+  // --- Jellyfish (ocean / underwater / calm) ---
   {
     url: `${TV}/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4`,
     title: "Jellyfish (360p)",
-    tags: ["ocean", "sea", "water", "jellyfish", "animal", "nature", "underwater", "blue", "calm"],
+    tags: ["ocean", "sea", "water", "jellyfish", "marine", "aquatic", "underwater", "deep", "blue", "glow", "bioluminescent", "animal", "nature", "calm", "float", "dark", "aquarium", "slow"],
   },
   {
     url: `${TV}/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4`,
     title: "Jellyfish (720p)",
-    tags: ["ocean", "sea", "water", "jellyfish", "animal", "nature", "underwater", "blue", "calm"],
+    tags: ["ocean", "sea", "water", "jellyfish", "marine", "aquatic", "underwater", "deep", "blue", "glow", "bioluminescent", "animal", "nature", "calm", "float", "dark", "aquarium", "slow"],
   },
+  {
+    url: `${TV}/jellyfish/mp4/h264/1080/Jellyfish_1080_10s_2MB.mp4`,
+    title: "Jellyfish (1080p)",
+    tags: ["ocean", "sea", "water", "jellyfish", "marine", "aquatic", "underwater", "deep", "blue", "glow", "bioluminescent", "animal", "nature", "calm", "float", "dark", "aquarium", "slow"],
+  },
+
+  // --- Sintel (fantasy / snow / dragon / warrior) ---
   {
     url: `${TV}/sintel/mp4/h264/360/Sintel_360_10s_1MB.mp4`,
     title: "Sintel (360p)",
-    tags: ["fantasy", "adventure", "animation", "snow", "mountain", "epic", "story", "dragon"],
+    tags: ["fantasy", "adventure", "animation", "snow", "ice", "winter", "cold", "mountain", "cliff", "epic", "story", "dragon", "warrior", "girl", "woman", "quest", "medieval", "journey", "action"],
   },
   {
     url: `${TV}/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4`,
     title: "Sintel (720p)",
-    tags: ["fantasy", "adventure", "animation", "snow", "mountain", "epic", "story", "dragon"],
+    tags: ["fantasy", "adventure", "animation", "snow", "ice", "winter", "cold", "mountain", "cliff", "epic", "story", "dragon", "warrior", "girl", "woman", "quest", "medieval", "journey", "action"],
   },
 
-  // media.w3.org
+  // --- media.w3.org ---
   {
     url: "https://media.w3.org/2010/05/sintel/trailer.mp4",
     title: "Sintel Trailer (W3C)",
-    tags: ["fantasy", "adventure", "epic", "animation", "snow", "mountain", "story"],
+    tags: ["fantasy", "adventure", "epic", "animation", "snow", "ice", "mountain", "cliff", "dragon", "warrior", "girl", "quest", "medieval", "story", "cinematic", "trailer"],
+  },
+  {
+    url: "https://media.w3.org/2010/05/sintel/trailer_hd.mp4",
+    title: "Sintel Trailer HD (W3C)",
+    tags: ["fantasy", "adventure", "epic", "animation", "snow", "ice", "mountain", "cliff", "dragon", "warrior", "girl", "quest", "medieval", "story", "cinematic", "trailer"],
   },
   {
     url: "https://media.w3.org/2010/05/bunny/movie.mp4",
     title: "Big Buck Bunny (W3C)",
-    tags: ["animal", "rabbit", "bunny", "cartoon", "nature", "animation", "forest"],
+    tags: ["animal", "rabbit", "bunny", "hare", "cartoon", "nature", "animation", "forest", "woods", "cute", "funny"],
   },
 
-  // MDN / w3schools
+  // --- Blender open-movie trailers (verified 200, ngắn) ---
+  {
+    url: "https://download.blender.org/durian/trailer/sintel_trailer-720p.mp4",
+    title: "Sintel Trailer (Blender)",
+    tags: ["fantasy", "adventure", "epic", "animation", "snow", "ice", "mountain", "dragon", "warrior", "girl", "quest", "medieval", "story", "cinematic", "trailer", "flight"],
+  },
+
+  // --- MDN / w3schools (flower / nature) ---
+  {
+    url: "https://mdn.github.io/shared-assets/videos/flower.mp4",
+    title: "Flower (MDN)",
+    tags: ["nature", "flower", "plant", "botanical", "petal", "bloom", "blossom", "spring", "garden", "macro", "closeup", "colorful", "pink", "red", "calm", "beauty"],
+  },
   {
     url: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    title: "Flower (MDN)",
-    tags: ["nature", "flower", "plant", "colorful", "calm", "closeup"],
+    title: "Flower (MDN legacy)",
+    tags: ["nature", "flower", "plant", "botanical", "petal", "bloom", "blossom", "spring", "garden", "macro", "closeup", "colorful", "pink", "red", "calm", "beauty"],
   },
   {
     url: "https://www.w3schools.com/html/mov_bbb.mp4",
     title: "Big Buck Bunny (w3schools)",
-    tags: ["animal", "rabbit", "bunny", "cartoon", "nature", "animation"],
+    tags: ["animal", "rabbit", "bunny", "hare", "cartoon", "nature", "animation", "forest", "cute"],
   },
 
-  // samplelib.com (theo redirect -> 200)
+  // --- Generic sample clips (fallback khi prompt không khớp chủ đề nào) ---
   {
     url: "https://download.samplelib.com/mp4/sample-5s.mp4",
     title: "SampleLib 5s",
-    tags: ["sample", "video", "clip", "generic", "motion"],
+    tags: ["sample", "video", "clip", "generic", "motion", "footage"],
   },
   {
     url: "https://download.samplelib.com/mp4/sample-10s.mp4",
     title: "SampleLib 10s",
-    tags: ["sample", "video", "clip", "generic", "motion"],
+    tags: ["sample", "video", "clip", "generic", "motion", "footage"],
   },
   {
     url: "https://download.samplelib.com/mp4/sample-20s.mp4",
     title: "SampleLib 20s",
-    tags: ["sample", "video", "clip", "generic", "motion"],
-  },
-
-  // filesamples.com
-  {
-    url: "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-    title: "FileSamples 640x360",
-    tags: ["sample", "video", "clip", "generic"],
+    tags: ["sample", "video", "clip", "generic", "motion", "footage"],
   },
   {
     url: "https://filesamples.com/samples/video/mp4/sample_1280x720.mp4",
     title: "FileSamples 1280x720",
-    tags: ["sample", "video", "clip", "generic"],
+    tags: ["sample", "video", "clip", "generic", "footage"],
   },
 ];
 
@@ -130,62 +153,62 @@ const GOOGLE_VIDEOS: DummyVideo[] = [
   {
     url: `${GTV}/ElephantsDream.mp4`,
     title: "Elephants Dream",
-    tags: ["animation", "fantasy", "sci-fi", "abstract", "surreal", "machine", "dream", "art"],
+    tags: ["animation", "fantasy", "sci-fi", "scifi", "abstract", "surreal", "machine", "mechanical", "industrial", "dream", "art", "dark", "robot", "future"],
   },
   {
     url: `${GTV}/ForBiggerBlazes.mp4`,
     title: "For Bigger Blazes",
-    tags: ["fire", "blaze", "action", "tech", "device", "abstract", "energy"],
+    tags: ["fire", "blaze", "flame", "burn", "action", "tech", "device", "abstract", "energy", "hot", "orange"],
   },
   {
     url: `${GTV}/ForBiggerEscapes.mp4`,
     title: "For Bigger Escapes",
-    tags: ["nature", "adventure", "travel", "outdoor", "escape", "landscape", "people"],
+    tags: ["nature", "adventure", "travel", "outdoor", "escape", "landscape", "people", "person", "journey", "explore", "scenic"],
   },
   {
     url: `${GTV}/ForBiggerFun.mp4`,
     title: "For Bigger Fun",
-    tags: ["fun", "party", "people", "happy", "colorful", "abstract"],
+    tags: ["fun", "party", "people", "person", "crowd", "happy", "joy", "colorful", "celebration", "dance"],
   },
   {
     url: `${GTV}/ForBiggerJoyrides.mp4`,
     title: "For Bigger Joyrides",
-    tags: ["car", "vehicle", "drive", "road", "joyride", "action", "speed", "travel"],
+    tags: ["car", "auto", "automobile", "vehicle", "drive", "driving", "road", "highway", "joyride", "action", "speed", "fast", "travel", "motor"],
   },
   {
     url: `${GTV}/ForBiggerMeltdowns.mp4`,
     title: "For Bigger Meltdowns",
-    tags: ["family", "people", "home", "funny", "indoor", "drama"],
+    tags: ["family", "people", "person", "home", "house", "funny", "indoor", "drama", "domestic"],
   },
   {
     url: `${GTV}/Sintel.mp4`,
     title: "Sintel",
-    tags: ["fantasy", "dragon", "adventure", "animation", "snow", "mountain", "girl", "person", "epic", "story"],
+    tags: ["fantasy", "dragon", "adventure", "animation", "snow", "ice", "mountain", "cliff", "girl", "woman", "person", "warrior", "quest", "epic", "story", "medieval"],
   },
   {
     url: `${GTV}/SubaruOutbackOnStreetAndDirt.mp4`,
     title: "Subaru Outback On Street And Dirt",
-    tags: ["car", "vehicle", "subaru", "suv", "drive", "road", "dirt", "offroad", "speed", "travel"],
+    tags: ["car", "auto", "automobile", "vehicle", "suv", "subaru", "drive", "driving", "road", "street", "dirt", "offroad", "speed", "travel", "motor"],
   },
   {
     url: `${GTV}/TearsOfSteel.mp4`,
     title: "Tears of Steel",
-    tags: ["sci-fi", "robot", "future", "city", "action", "people", "epic", "machine", "tech"],
+    tags: ["sci-fi", "scifi", "robot", "cyborg", "android", "future", "futuristic", "city", "urban", "street", "action", "people", "person", "epic", "machine", "tech", "dystopia", "war"],
   },
   {
     url: `${GTV}/VolkswagenGTIReview.mp4`,
     title: "Volkswagen GTI Review",
-    tags: ["car", "vehicle", "volkswagen", "gti", "drive", "review", "road", "speed"],
+    tags: ["car", "auto", "automobile", "vehicle", "volkswagen", "gti", "drive", "driving", "review", "road", "street", "speed", "motor"],
   },
   {
     url: `${GTV}/WeAreGoingOnBullrun.mp4`,
     title: "We Are Going On Bullrun",
-    tags: ["car", "vehicle", "race", "bullrun", "drive", "road", "speed", "travel", "adventure"],
+    tags: ["car", "auto", "vehicle", "race", "racing", "bullrun", "drive", "road", "highway", "speed", "fast", "travel", "adventure", "motor"],
   },
   {
     url: `${GTV}/WhatCarCanYouGetForAGrand.mp4`,
     title: "What Car Can You Get For A Grand",
-    tags: ["car", "vehicle", "budget", "drive", "road", "review"],
+    tags: ["car", "auto", "automobile", "vehicle", "budget", "drive", "road", "review", "motor"],
   },
 ];
 

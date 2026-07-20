@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { IconSun, IconMoon } from "@tabler/icons-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Determine active theme on load
@@ -26,7 +28,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Toggle theme"
+      aria-label={t("theme.toggle")}
       className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-transparent p-0 hover:bg-muted transition-colors cursor-pointer text-foreground"
     >
       <span className="relative inline-flex size-4 items-center justify-center">

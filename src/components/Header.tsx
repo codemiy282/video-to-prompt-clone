@@ -5,17 +5,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import Logo from "./Logo";
-import { IconChevronDown, IconLanguage, IconSelector, IconMenu2, IconX } from "@tabler/icons-react";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { localeNames, locales } from "@/i18n/config";
+import { IconChevronDown, IconLanguage, IconMenu2, IconX } from "@tabler/icons-react";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [generatorsOpen, setGeneratorsOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const pathname = usePathname();
+  const { t, locale, setLocale } = useLanguage();
 
   // Close any open menu when the route changes via client-side navigation.
   useEffect(() => {
     setGeneratorsOpen(false);
     setMobileMenuOpen(false);
+    setLangOpen(false);
   }, [pathname]);
 
   return (
@@ -36,39 +41,57 @@ export default function Header() {
                 onClick={() => setGeneratorsOpen(!generatorsOpen)}
                 className="group inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted focus:outline-none cursor-pointer text-foreground"
               >
-                Prompt Generators
+                {t("nav.generators")}
                 <IconChevronDown className={`ml-1 size-3 transition-transform duration-200 ${generatorsOpen ? "rotate-180" : ""}`} />
               </button>
               {generatorsOpen && (
                 <div className="absolute left-0 mt-2 w-48 rounded-md border border-border bg-card p-1 shadow-md z-50">
-                  <Link href="/kling" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">Kling AI Generator</Link>
-                  <Link href="/runway" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">Runway Generator</Link>
-                  <Link href="/seedance" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">Seedance Generator</Link>
-                  <Link href="/veo" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">Veo 3 Generator</Link>
+                  <Link href="/kling" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">{t("nav.sub.kling")}</Link>
+                  <Link href="/runway" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">{t("nav.sub.runway")}</Link>
+                  <Link href="/seedance" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">{t("nav.sub.seedance")}</Link>
+                  <Link href="/veo" className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">{t("nav.sub.veo")}</Link>
                 </div>
               )}
             </div>
             <Link href="/image-to-video" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-              Image to Video
+              {t("nav.imageToVideo")}
             </Link>
             <Link href="/image-to-prompt" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-              Image to Prompt
+              {t("nav.imageToPrompt")}
             </Link>
             <Link href="/storyboard" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
-              Storyboard
+              {t("nav.storyboard")}
             </Link>
           </div>
 
           {/* Right Actions */}
           <div className="hidden lg:flex items-center gap-4 shrink-0">
-            <button
-              type="button"
-              className="flex w-fit items-center justify-between rounded-lg border border-input px-2 h-9 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer gap-1.5"
-            >
-              <IconLanguage className="size-4" />
-              <span>en</span>
-              <IconSelector className="size-4" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-label={t("lang.select")}
+                onClick={() => setLangOpen(!langOpen)}
+                className="flex w-fit items-center justify-between rounded-lg border border-input px-2 h-9 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer gap-1.5"
+              >
+                <IconLanguage className="size-4" />
+                <span>{localeNames[locale]}</span>
+                <IconChevronDown className={`size-4 transition-transform duration-200 ${langOpen ? "rotate-180" : ""}`} />
+              </button>
+              {langOpen && (
+                <div className="absolute right-0 mt-2 w-40 rounded-md border border-border bg-card p-1 shadow-md z-50">
+                  {locales.map((l) => (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => { setLocale(l); setLangOpen(false); }}
+                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${l === locale ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                    >
+                      {localeNames[l]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <ThemeToggle />
           </div>
 
@@ -77,6 +100,7 @@ export default function Header() {
             <ThemeToggle />
             <button
               type="button"
+              aria-label={t("nav.menu")}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-1 rounded-md border border-border text-foreground hover:bg-muted cursor-pointer"
             >
@@ -88,21 +112,21 @@ export default function Header() {
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
           <div className="lg:hidden mt-4 pt-4 border-t border-border flex flex-col gap-2">
-            <div className="px-3 py-2 font-semibold text-sm text-foreground">Prompt Generators</div>
+            <div className="px-3 py-2 font-semibold text-sm text-foreground">{t("nav.generators")}</div>
             <div className="pl-4 flex flex-col gap-1 border-l border-border ml-3">
-              <Link href="/kling" className="py-2 text-sm text-muted-foreground hover:text-foreground">Kling AI Generator</Link>
-              <Link href="/runway" className="py-2 text-sm text-muted-foreground hover:text-foreground">Runway Generator</Link>
-              <Link href="/seedance" className="py-2 text-sm text-muted-foreground hover:text-foreground">Seedance Generator</Link>
-              <Link href="/veo" className="py-2 text-sm text-muted-foreground hover:text-foreground">Veo 3 Generator</Link>
+              <Link href="/kling" className="py-2 text-sm text-muted-foreground hover:text-foreground">{t("nav.sub.kling")}</Link>
+              <Link href="/runway" className="py-2 text-sm text-muted-foreground hover:text-foreground">{t("nav.sub.runway")}</Link>
+              <Link href="/seedance" className="py-2 text-sm text-muted-foreground hover:text-foreground">{t("nav.sub.seedance")}</Link>
+              <Link href="/veo" className="py-2 text-sm text-muted-foreground hover:text-foreground">{t("nav.sub.veo")}</Link>
             </div>
             <Link href="/image-to-video" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
-              Image to Video
+              {t("nav.imageToVideo")}
             </Link>
             <Link href="/image-to-prompt" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
-              Image to Prompt
+              {t("nav.imageToPrompt")}
             </Link>
             <Link href="/storyboard" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
-              Storyboard
+              {t("nav.storyboard")}
             </Link>
           </div>
         )}

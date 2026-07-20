@@ -1,10 +1,3 @@
-/**
- * Image to Video page with LTX-Video integration
- * 
- * Place this at: src/app/image-to-video/page.tsx
- * Replaces the existing implementation
- */
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -18,6 +11,7 @@ import {
   IconDownload,
   IconAlertCircle,
 } from "@tabler/icons-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface GenerationResponse {
   success: boolean;
@@ -44,10 +38,11 @@ export default function ImageToVideo() {
   const [progress, setProgress] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { t, locale } = useLanguage();
 
   async function generateVideo() {
     if (!selectedFile || !prompt.trim()) {
-      setError("Please upload an image and enter a prompt");
+      setError(t("itv.errorUploadPrompt"));
       return;
     }
 
@@ -56,7 +51,7 @@ export default function ImageToVideo() {
     setResult(null);
     setVideoTitle(null);
     setVideoBlob(null);
-    setProgress("Sending request to server...");
+    setProgress(t("itv.progressSending"));
 
     try {
       const formData = new FormData();
@@ -65,8 +60,9 @@ export default function ImageToVideo() {
       formData.append("num_frames", String(numFrames));
       formData.append("guidance_scale", String(guidanceScale));
       formData.append("num_inference_steps", String(inferenceSteps));
+      formData.append("lang", locale);
 
-      setProgress("Processing on backend...");
+      setProgress(t("itv.progressProcessing"));
 
       const response = await fetch("/api/ltx-video", {
         method: "POST",
@@ -76,15 +72,13 @@ export default function ImageToVideo() {
       const data: GenerationResponse = await response.json();
 
       if (!data.success) {
-        let errorMsg = data.message || data.error || "Generation failed";
+        let errorMsg = data.message || data.error || t("common.requestFailed");
 
-        // Provide helpful error messages
         if (
           data.error === "BACKEND_UNAVAILABLE" ||
           data.error?.includes("BACKEND")
         ) {
-          errorMsg +=
-            "\n\nStart the backend with:\npython -m uvicorn ltx_video_api:app --reload";
+          errorMsg += "\n\n" + t("itv.errorBackend");
         }
 
         setError(errorMsg);
@@ -92,13 +86,11 @@ export default function ImageToVideo() {
         return;
       }
 
-      // Ưu tiên video_url (dummy service trả link trực tiếp)
       if (data.video_url) {
         setResult(data.video_url);
         setVideoTitle(data.title ?? null);
         setProgress("");
       } else if (data.video_base64) {
-        // Fallback: base64 (giữ tương thích luồng cũ)
         const binaryString = atob(data.video_base64);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
@@ -106,28 +98,22 @@ export default function ImageToVideo() {
         }
         const blob = new Blob([bytes], { type: "video/mp4" });
         setVideoBlob(blob);
-
-        // Create preview URL
         const url = URL.createObjectURL(blob);
         setResult(url);
         setProgress("");
       } else {
-        setError("No video data received");
+        setError(t("itv.errorNoData"));
         setProgress("");
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Unknown error";
 
       if (errorMsg.includes("ECONNREFUSED")) {
-        setError(
-          "Cannot connect to backend. Make sure it's running:\npython -m uvicorn ltx_video_api:app --reload"
-        );
+        setError(t("itv.errorConnRefused"));
       } else if (errorMsg.includes("timeout")) {
-        setError(
-          "Generation timed out. Try reducing num_frames or inference_steps"
-        );
+        setError(t("itv.errorTimeout"));
       } else {
-        setError(`Error: ${errorMsg}`);
+        setError(t("itv.errorUnknown", { msg: errorMsg }));
       }
 
       setProgress("");
@@ -140,7 +126,7 @@ export default function ImageToVideo() {
     const f = e.target.files?.[0];
     if (f) {
       if (f.size > 10 * 1024 * 1024) {
-        setError("Image must be smaller than 10MB");
+        setError(t("itv.errorImageSize"));
         return;
       }
       setSelectedFile(f);
@@ -150,7 +136,6 @@ export default function ImageToVideo() {
   }
 
   function handleDownload() {
-    // Trường hợp video_url (dummy): mở/tải trực tiếp từ link.
     if (!videoBlob) {
       if (result) window.open(result, "_blank");
       return;
@@ -166,17 +151,27 @@ export default function ImageToVideo() {
     URL.revokeObjectURL(url);
   }
 
+  async function handleCopy() {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(result);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable; ignore.
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
       <section className="relative overflow-hidden pt-12 pb-16">
         <div className="container mx-auto max-w-7xl px-6 relative z-10">
           <div className="text-center sm:mx-auto">
             <h1 className="animate-fade-up delay-1 text-balance font-bold text-4xl text-foreground sm:text-5xl md:text-6xl xl:text-7xl">
-              Image to Video
+              {t("itv.title")}
             </h1>
             <p className="animate-fade-up delay-2 mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
-              Transform static images into cinematic AI-generated videos using
-              LTX-Video
+              {t("itv.subtitle")}
             </p>
           </div>
 
@@ -185,7 +180,7 @@ export default function ImageToVideo() {
               {/* Image Upload */}
               <div className="my-6">
                 <label className="block text-sm font-medium mb-2">
-                  Upload Image
+                  {t("itv.uploadLabel")}
                 </label>
                 <input
                   ref={fileInputRef}
@@ -202,10 +197,10 @@ export default function ImageToVideo() {
                 >
                   <IconUpload className="mb-3 size-11 text-muted-foreground" />
                   <h3 className="font-semibold text-lg text-foreground">
-                    {selectedFile ? selectedFile.name : "Upload your source image"}
+                    {selectedFile ? selectedFile.name : t("itv.uploadPrompt")}
                   </h3>
                   <p className="mx-auto max-w-md text-muted-foreground text-sm leading-7">
-                    PNG, JPG, or WEBP (max 10MB)
+                    {t("itv.uploadDesc")}
                   </p>
                 </button>
               </div>
@@ -213,12 +208,12 @@ export default function ImageToVideo() {
               {/* Prompt Input */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Video Prompt
+                  {t("itv.promptLabel")}
                 </label>
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Describe the video you want to generate. E.g., 'A cinematic shot of a futuristic city at sunset with neon lights reflecting on wet streets'"
+                  placeholder={t("itv.promptPlaceholder")}
                   disabled={generating}
                   className="w-full h-24 rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none resize-none disabled:opacity-50"
                 />
@@ -228,7 +223,7 @@ export default function ImageToVideo() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-medium mb-2">
-                    Frames ({numFrames})
+                    {t("itv.frames", { numFrames })}
                   </label>
                   <input
                     type="range"
@@ -246,7 +241,7 @@ export default function ImageToVideo() {
 
                 <div>
                   <label className="block text-xs font-medium mb-2">
-                    Guidance ({guidanceScale.toFixed(1)})
+                    {t("itv.guidance", { guidance: guidanceScale.toFixed(1) })}
                   </label>
                   <input
                     type="range"
@@ -262,7 +257,7 @@ export default function ImageToVideo() {
 
                 <div>
                   <label className="block text-xs font-medium mb-2">
-                    Steps ({inferenceSteps})
+                    {t("itv.steps", { steps: inferenceSteps })}
                   </label>
                   <input
                     type="range"
@@ -290,7 +285,7 @@ export default function ImageToVideo() {
                   ) : (
                     <IconPlayerPlayFilled className="size-4 mr-2" />
                   )}
-                  {generating ? "Generating..." : "Generate Video"}
+                  {generating ? t("common.generating") : t("itv.generate")}
                 </button>
               </div>
 
@@ -317,7 +312,7 @@ export default function ImageToVideo() {
                 <div className="mx-auto mt-4 max-w-2xl rounded-2xl border border-border bg-card p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground">
-                      {videoTitle ? `Generated Video · ${videoTitle}` : "Generated Video"}
+                      {videoTitle ? t("itv.generatedVideoTitle", { title: videoTitle }) : t("itv.generatedVideo")}
                     </h3>
                     <button
                       type="button"
@@ -325,7 +320,7 @@ export default function ImageToVideo() {
                       className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-muted/50 cursor-pointer flex items-center gap-1"
                     >
                       <IconDownload className="size-3" />
-                      Download
+                      {t("itv.download")}
                     </button>
                   </div>
 
@@ -342,10 +337,10 @@ export default function ImageToVideo() {
                   <div className="text-xs text-muted-foreground">
                     {videoBlob && (
                       <p>
-                        💾 Size: {(videoBlob.size / (1024 * 1024)).toFixed(2)} MB
+                        📦 {t("itv.size", { mb: (videoBlob.size / (1024 * 1024)).toFixed(2) })}
                       </p>
                     )}
-                    <p>⏱️ Duration: {Math.round((numFrames / 30) * 10) / 10}s</p>
+                    <p>⏱️ {t("itv.duration", { s: Math.round((numFrames / 30) * 10) / 10 })}</p>
                   </div>
                 </div>
               )}

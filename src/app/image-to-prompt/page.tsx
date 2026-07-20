@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { IconPhoto, IconVideo, IconUpload, IconPlayerPlayFilled } from "@tabler/icons-react";
 
 export default function ImageToPrompt() {
@@ -12,8 +13,10 @@ export default function ImageToPrompt() {
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t, locale } = useLanguage();
 
   async function postPrompt(body: FormData) {
+    body.append("lang", locale);
     setLoading(true);
     setError(null);
     setResult(null);
@@ -22,9 +25,9 @@ export default function ImageToPrompt() {
       const res = await fetch("/api/generate-prompt", { method: "POST", body });
       const data = await res.json();
       if (data.success) setResult(data.prompt);
-      else setError(data.error?.message || "Request failed.");
+      else setError(data.error?.message || t("common.requestFailed"));
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("common.networkError"));
     } finally {
       setLoading(false);
     }
@@ -69,10 +72,10 @@ export default function ImageToPrompt() {
         <div className="container mx-auto max-w-7xl px-6 relative z-10">
           <div className="text-center sm:mx-auto">
             <h1 className="animate-fade-up delay-1 text-balance font-bold text-4xl text-foreground sm:text-5xl md:text-6xl xl:text-7xl">
-              Image to Prompt
+              {t("itp.title")}
             </h1>
             <p className="animate-fade-up delay-2 mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
-              Extract descriptive AI prompts from any image.
+              {t("itp.subtitle")}
             </p>
           </div>
 
@@ -95,7 +98,7 @@ export default function ImageToPrompt() {
                 }`}
               >
                 <IconPhoto className="h-4 w-4" />
-                Image to Prompt
+                {t("itp.tabImage")}
               </button>
             </div>
 
@@ -111,10 +114,10 @@ export default function ImageToPrompt() {
                 >
                   <IconUpload className="mb-3 size-11 text-muted-foreground" />
                   <h3 className="font-semibold text-lg text-foreground">
-                    {selectedFile ? selectedFile.name : "Upload your image"}
+                    {selectedFile ? selectedFile.name : t("itp.upload")}
                   </h3>
                   <p className="mx-auto max-w-md text-muted-foreground text-sm leading-7">
-                    Supports JPG, PNG, WEBP, and GIF files up to 10 MB
+                    {t("itp.uploadDesc")}
                   </p>
                 </button>
                 <input
@@ -134,14 +137,14 @@ export default function ImageToPrompt() {
                   className="group inline-flex shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-medium text-sm transition-all h-12 px-8 hover:opacity-90 disabled:opacity-50 cursor-pointer"
                 >
                   <IconPlayerPlayFilled className="size-4 mr-2" />
-                  {loading ? "Analyzing…" : "Extract Prompt"}
+                  {loading ? t("itp.analyzing") : t("itp.extract")}
                 </button>
               </div>
 
               {loading && (
                 <div className="mx-auto mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <span className="size-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary" />
-                  Generating your prompt…
+                  {t("itp.analyzing")}
                 </div>
               )}
 
@@ -154,13 +157,13 @@ export default function ImageToPrompt() {
               {result && (
                 <div className="mx-auto mt-4 rounded-2xl border border-border bg-card p-5">
                   <div className="mb-3 flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground">Generated Prompt</h3>
+                    <h3 className="font-semibold text-foreground">{t("itp.result")}</h3>
                     <button
                       type="button"
                       onClick={handleCopy}
                       className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:bg-muted/50 cursor-pointer"
                     >
-                      {copied ? "Copied!" : "Copy"}
+                      {copied ? t("common.copied") : t("common.copy")}
                     </button>
                   </div>
                   <textarea

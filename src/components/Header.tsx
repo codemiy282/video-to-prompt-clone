@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import Logo from "./Logo";
 import { IconChevronDown, IconLanguage, IconSelector, IconMenu2, IconX } from "@tabler/icons-react";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [generatorsOpen, setGeneratorsOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close any open menu when the route changes via client-side navigation.
+  useEffect(() => {
+    setGeneratorsOpen(false);
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-4 transition-all duration-300">
@@ -15,8 +24,7 @@ export default function Header() {
         <nav aria-label="Main navigation" className="flex items-center justify-between gap-4">
           {/* Logo */}
           <Link aria-label="Home" className="flex items-center gap-2 shrink-0" href="/">
-            <img src="https://videotoprompt.org/logo.png" alt="Video to Prompt logo" className="size-8 rounded-md dark:hidden" width="32" height="32" />
-            <img src="https://videotoprompt.org/logo-dark.png" alt="Video to Prompt logo" className="size-8 rounded-md hidden dark:block" width="32" height="32" />
+            <Logo />
             <span className="text-xl font-semibold tracking-tight text-foreground">Video to Prompt</span>
           </Link>
 

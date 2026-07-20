@@ -161,16 +161,43 @@ export async function generateStoryboard(script: string): Promise<string> {
   return result.response.text();
 }
 
-const PLATFORM_PROMPTS: Record<string, string> = {
-  kling:
-    "You are a Kling AI prompt expert. Transform the idea below into a detailed prompt optimized for Kling AI video generation. Focus on cinematic camera moves, tracking shots, consistent character motion, and realistic 1080p text-to-video output. Include visual style, lighting, color palette, and camera positioning.",
-  runway:
-    "You are a Runway prompt expert. Transform the idea below into a detailed prompt optimized for Runway Gen-3 and Gen-4. Focus on cinematographic direction, volumetric lighting, color-grading cues, camera angles, and visual effects. Include atmosphere, texture details, and motion style.",
-  seedance:
-    "You are a Seedance prompt expert. Transform the idea below into a detailed prompt optimized for ByteDance Seedance. Focus on shot-by-shot framing, smooth multi-shot motion, stable subjects, and native cinematic framing. Include scene transitions and temporal coherence.",
-  veo: "You are a Veo 3 prompt expert. Transform the idea below into a detailed prompt optimized for Google Veo 3. Include scene descriptions, camera movements, and synchronized audio cues — dialogue, sound effects, and music. Leverage Veo 3's native sound generation capabilities.",
-  storyboard:
-    "You are a storyboard expert. Transform the script or idea below into a scene-by-scene storyboard breakdown. For each scene, describe the shot type, camera angle, composition, action, and key visual elements. Format each scene clearly.",
+interface PlatformSpec {
+  display: string;
+  system: string;
+  format: string;
+}
+
+// Each video platform expects a different prompt shape, so every call is
+// explicitly tagged with its target platform (e.g. "CHO NỀN TẢNG Veo 3").
+const PLATFORMS: Record<string, PlatformSpec> = {
+  veo: {
+    display: "Veo 3",
+    system:
+      "You are an elite prompt engineer specialized in Google Veo 3. You write production-ready, cinematic text-to-video prompts that fully exploit Veo 3's capabilities.",
+    format:
+      "Emphasize scene descriptions, camera movement, and synchronized audio cues (dialogue, sound effects, and music) because Veo 3 generates native sound. Keep the prompt coherent and shot-focused.",
+  },
+  runway: {
+    display: "Runway",
+    system:
+      "You are an elite prompt engineer specialized in Runway Gen-3 and Gen-4. You write production-ready, cinematic text-to-video prompts that fully exploit Runway's capabilities.",
+    format:
+      "Emphasize cinematographic direction, volumetric lighting, color-grading cues, camera angles, and visual effects. Include atmosphere, texture details, and motion style.",
+  },
+  kling: {
+    display: "Kling AI",
+    system:
+      "You are an elite prompt engineer specialized in Kling AI. You write production-ready, cinematic text-to-video prompts that fully exploit Kling's capabilities.",
+    format:
+      "Emphasize cinematic camera moves, tracking shots, consistent character motion, and realistic 1080p text-to-video output. Include visual style, lighting, color palette, and camera positioning.",
+  },
+  seedance: {
+    display: "Seedance",
+    system:
+      "You are an elite prompt engineer specialized in ByteDance Seedance. You write production-ready, cinematic text-to-video prompts that fully exploit Seedance's capabilities.",
+    format:
+      "Emphasize shot-by-shot framing, smooth multi-shot motion, stable subjects, and native cinematic framing. Include scene transitions and temporal coherence.",
+  },
 };
 
 export async function generatePlatformPrompt(
@@ -180,9 +207,25 @@ export async function generatePlatformPrompt(
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);
 
+  const spec = PLATFORMS[platform];
   const systemText =
-    PLATFORM_PROMPTS[platform] ||
+    spec?.system ??
     "You are an expert prompt engineer. Transform the idea below into a detailed, well-crafted prompt for AI video generation. Focus on visual style, camera movements, lighting, mood, and composition.";
+
+  const display = spec?.display ?? platform;
+
+  const lines = [
+    `Tạo một prompt chi tiết và sẵn sàng sử dụng CHO NỀN TẢNG ${display}, dựa trên nội dung sau:`,
+    "",
+    description,
+  ];
+  if (spec?.format) {
+    lines.push("", spec.format);
+  }
+  lines.push(
+    "",
+    "Chỉ trả về duy nhất prompt (viết bằng tiếng Anh), không giải thích, không thêm tiền tố hay lời giới thiệu."
+  );
 
   const systemInstruction: Content = {
     role: "user",
@@ -194,9 +237,7 @@ export async function generatePlatformPrompt(
     contents: [
       {
         role: "user",
-        parts: [
-          { text: `User's idea:\n${description}\n\nGenerate a single, detailed prompt (no explanations, no prefixes):` },
-        ],
+        parts: [{ text: lines.join("\n") }],
       },
     ],
   });

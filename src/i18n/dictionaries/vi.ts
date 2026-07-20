@@ -10,6 +10,7 @@ const vi = {
     imageToVideo: "Ảnh sang Video",
     imageToPrompt: "Ảnh sang Prompt",
     storyboard: "Bảng phân cảnh",
+    feedback: "Góp ý",
     menu: "Menu",
   },
   lang: {
@@ -33,6 +34,7 @@ const vi = {
     storyboard: "Trình tạo Bảng phân cảnh",
     privacy: "Chính sách bảo mật",
     terms: "Điều khoản dịch vụ",
+    feedback: "Góp ý & Yêu cầu",
     rights: "© {year} Video to Prompt. Bảo lưu tất cả các quyền.",
   },
   theme: {
@@ -47,7 +49,13 @@ const vi = {
     requestFailed: "Yêu cầu thất bại.",
   },
   home: {
-    hero: { subtitle: "Biến mọi thước phim thành prompt AI tức thì." },
+    hero: {
+      subtitle:
+        "Trợ lý tiền kỳ video AI của bạn. Biến mọi ý tưởng, clip hay ảnh thành prompt, phân cảnh và bảng phân cảnh sẵn sàng sản xuất — để credit của bạn dành cho những lần tạo video chất lượng, không phải mò mẫm.",
+      value1: "Tiết kiệm hàng giờ chuẩn bị",
+      value2: "Output sắc nét, sẵn cho model",
+      value3: "Không phí credit tạo video",
+    },
     tab: { image: "Ảnh sang Prompt" },
     url: { placeholder: "https://youtube.com/shorts/...", submit: "Lấy Prompt" },
     upload: {
@@ -206,6 +214,28 @@ const vi = {
     placeholder: "Mô tả câu chuyện hoặc kịch bản của bạn tại đây...",
     generate: "Tạo Bảng phân cảnh",
     result: "Bảng phân cảnh",
+  },
+  fb: {
+    title: "Góp ý & Yêu cầu tính năng",
+    subtitle:
+      "Cùng định hình sản phẩm. Hãy cho chúng tôi biết điều gì giúp khâu tiền kỳ video của bạn nhanh hơn và output tốt hơn — cộng đồng quyết định chúng tôi làm gì tiếp theo.",
+    typeLabel: "Loại",
+    typeFeedback: "Góp ý",
+    typeFeature: "Yêu cầu tính năng",
+    typeBug: "Báo lỗi",
+    messageLabel: "Nội dung",
+    messagePlaceholder: "Điều gì đang tốt, còn thiếu gì, hay bạn muốn thấy gì tiếp theo...",
+    nameLabel: "Tên (tùy chọn)",
+    namePlaceholder: "Tên của bạn",
+    emailLabel: "Email (tùy chọn)",
+    emailPlaceholder: "you@example.com — nếu bạn muốn được phản hồi",
+    submit: "Gửi góp ý",
+    submitting: "Đang gửi...",
+    successTitle: "Cảm ơn bạn! 🎉",
+    successDesc: "Góp ý của bạn đã được ghi nhận. Chúng tôi đọc mọi tin nhắn để cải thiện sản phẩm.",
+    another: "Gửi góp ý khác",
+    errorEmpty: "Vui lòng nhập nội dung.",
+    errorFailed: "Không gửi được. Vui lòng thử lại.",
   },
   trust: {
     poweredBy: "Được cung cấp bởi Google Gemini",

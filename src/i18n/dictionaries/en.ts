@@ -10,6 +10,7 @@ const en = {
     imageToVideo: "Image to Video",
     imageToPrompt: "Image to Prompt",
     storyboard: "Storyboard",
+    feedback: "Feedback",
     menu: "Menu",
   },
   lang: {
@@ -33,6 +34,7 @@ const en = {
     storyboard: "Storyboard Generator",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
+    feedback: "Feedback & Requests",
     rights: "© {year} Video to Prompt. All rights reserved.",
   },
   theme: {
@@ -47,7 +49,13 @@ const en = {
     requestFailed: "Request failed.",
   },
   home: {
-    hero: { subtitle: "Turn every clip into instant AI prompts." },
+    hero: {
+      subtitle:
+        "Your AI video pre-production copilot. Turn any idea, clip, or image into production-ready prompts, scene breakdowns, and storyboards — so your credits go to great generations, not guesswork.",
+      value1: "Save hours of setup",
+      value2: "Sharper, model-ready output",
+      value3: "Stop wasting generation credits",
+    },
     tab: { image: "Image to Prompt" },
     url: { placeholder: "https://youtube.com/shorts/...", submit: "Get Prompt" },
     upload: {
@@ -206,6 +214,28 @@ const en = {
     placeholder: "Describe your story or script here...",
     generate: "Generate Storyboard",
     result: "Storyboard",
+  },
+  fb: {
+    title: "Feedback & Feature Requests",
+    subtitle:
+      "Help shape the product. Tell us what would make your video pre-production faster and your output better — the community steers what we build next.",
+    typeLabel: "Type",
+    typeFeedback: "Feedback",
+    typeFeature: "Feature request",
+    typeBug: "Bug report",
+    messageLabel: "Your message",
+    messagePlaceholder: "What's working, what's missing, or what you'd love to see next...",
+    nameLabel: "Name (optional)",
+    namePlaceholder: "Your name",
+    emailLabel: "Email (optional)",
+    emailPlaceholder: "you@example.com — if you'd like a reply",
+    submit: "Send feedback",
+    submitting: "Sending...",
+    successTitle: "Thank you! 🎉",
+    successDesc: "Your feedback has been received. We read every message to improve the product.",
+    another: "Send another",
+    errorEmpty: "Please enter a message.",
+    errorFailed: "Could not send. Please try again.",
   },
   trust: {
     poweredBy: "Powered by Google Gemini",

@@ -133,6 +133,20 @@ export default function Home() {
             <p className="animate-fade-up delay-2 mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
               {t("home.hero.subtitle")}
             </p>
+            <div className="animate-fade-up delay-2 mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <IconStopwatch className="size-4 text-primary" />
+                {t("home.hero.value1")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <IconSparkles className="size-4 text-primary" />
+                {t("home.hero.value2")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <IconBolt className="size-4 text-primary" />
+                {t("home.hero.value3")}
+              </span>
+            </div>
           </div>
 
           <div className="animate-fade-up delay-3 mx-auto mt-8 max-w-3xl">

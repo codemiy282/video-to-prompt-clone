@@ -46,6 +46,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/feedback" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {t("footer.feedback")}
+                </Link>
+              </li>
+              <li>
                 <a href="mailto:support@videotoprompt.org" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {t("footer.emailSupport")}
                 </a>

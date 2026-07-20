@@ -10,6 +10,7 @@ const zh = {
     imageToVideo: "图片转视频",
     imageToPrompt: "图片转提示词",
     storyboard: "故事板",
+    feedback: "反馈",
     menu: "菜单",
   },
   lang: {
@@ -33,6 +34,7 @@ const zh = {
     storyboard: "故事板生成器",
     privacy: "隐私政策",
     terms: "服务条款",
+    feedback: "反馈与需求",
     rights: "© {year} Video to Prompt. 保留所有权利。",
   },
   theme: {
@@ -47,7 +49,13 @@ const zh = {
     requestFailed: "请求失败。",
   },
   home: {
-    hero: { subtitle: "让每一段视频瞬间变成 AI 提示词。" },
+    hero: {
+      subtitle:
+        "你的 AI 视频前期制作副驾。把任何创意、片段或图片变成可直接投产的提示词、分镜和故事板——让你的额度用在出色的生成上，而不是反复试错。",
+      value1: "省下数小时的准备",
+      value2: "更精准、可直接喂给模型的产出",
+      value3: "不再浪费生成额度",
+    },
     tab: { image: "图片转提示词" },
     url: { placeholder: "https://youtube.com/shorts/...", submit: "获取提示词" },
     upload: {
@@ -206,6 +214,28 @@ const zh = {
     placeholder: "在此描述你的故事或剧本……",
     generate: "生成故事板",
     result: "故事板",
+  },
+  fb: {
+    title: "反馈与功能需求",
+    subtitle:
+      "一起塑造产品。告诉我们什么能让你的视频前期制作更快、产出更好——由社区决定我们接下来做什么。",
+    typeLabel: "类型",
+    typeFeedback: "反馈",
+    typeFeature: "功能需求",
+    typeBug: "问题反馈",
+    messageLabel: "你的留言",
+    messagePlaceholder: "哪些好用、缺了什么，或你接下来最想看到什么……",
+    nameLabel: "姓名（可选）",
+    namePlaceholder: "你的名字",
+    emailLabel: "邮箱（可选）",
+    emailPlaceholder: "you@example.com —— 如果你希望得到回复",
+    submit: "发送反馈",
+    submitting: "发送中……",
+    successTitle: "谢谢你！🎉",
+    successDesc: "已收到你的反馈。我们会阅读每一条留言来改进产品。",
+    another: "再发一条",
+    errorEmpty: "请输入留言内容。",
+    errorFailed: "发送失败，请重试。",
   },
   trust: {
     poweredBy: "由 Google Gemini 提供支持",

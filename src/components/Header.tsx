@@ -62,6 +62,9 @@ export default function Header() {
             <Link href="/storyboard" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.storyboard")}
             </Link>
+            <Link href="/feedback" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              {t("nav.feedback")}
+            </Link>
           </div>
 
           {/* Right Actions */}
@@ -127,6 +130,9 @@ export default function Header() {
             </Link>
             <Link href="/storyboard" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.storyboard")}
+            </Link>
+            <Link href="/feedback" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
+              {t("nav.feedback")}
             </Link>
           </div>
         )}

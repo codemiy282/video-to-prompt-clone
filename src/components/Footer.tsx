@@ -102,6 +102,11 @@ export default function Footer() {
                   {t("footer.storyboard")}
                 </Link>
               </li>
+              <li>
+                <Link href="/models" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {t("footer.models")}
+                </Link>
+              </li>
             </ul>
           </div>
 

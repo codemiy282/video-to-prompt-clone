@@ -174,7 +174,6 @@ const vi = {
   itv: {
     title: "Ảnh sang Video",
     subtitle: "Biến một ảnh tĩnh thành bản xem trước chuyển động tham khảo — hình dung chuyển động và lên kế hoạch cảnh quay trước khi tạo.",
-    note: "Chỉ là bản xem trước tham khảo — chức năng này trả về một clip stock phù hợp để bạn hình dung chuyển động, KHÔNG phải AI sinh video. Hãy mang prompt hoàn chỉnh sang nền tảng video thật (Kling, Veo, Runway…) để render.",
     uploadLabel: "Tải ảnh lên",
     uploadPrompt: "Tải ảnh nguồn của bạn lên",
     uploadDesc: "PNG, JPG hoặc WEBP (tối đa 10MB)",

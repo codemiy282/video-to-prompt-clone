@@ -174,7 +174,6 @@ const en = {
   itv: {
     title: "Image to Video",
     subtitle: "Turn a still image into a reference motion preview — visualize the movement and plan your shot before you generate.",
-    note: "Reference preview only — this returns a matching stock clip to help you picture the motion, it is not AI video generation. Take your finished prompt to a real video platform (Kling, Veo, Runway…) to render.",
     uploadLabel: "Upload Image",
     uploadPrompt: "Upload your source image",
     uploadDesc: "PNG, JPG, or WEBP (max 10MB)",

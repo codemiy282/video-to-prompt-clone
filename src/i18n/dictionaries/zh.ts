@@ -174,7 +174,6 @@ const zh = {
   itv: {
     title: "图片转视频",
     subtitle: "把一张静态图片变成参考性的运动预览——在正式生成前想象运动效果并规划镜头。",
-    note: "仅供参考预览——此功能返回一段匹配的库存片段，帮助你想象运动效果，并非 AI 生成视频。请把完成的提示词用到真正的视频平台（Kling、Veo、Runway……）上进行渲染。",
     uploadLabel: "上传图片",
     uploadPrompt: "上传你的源图片",
     uploadDesc: "PNG、JPG 或 WEBP（最大 10MB）",

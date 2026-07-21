@@ -116,9 +116,11 @@ export default function Home() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="flex flex-col min-h-screen bg-background text-foreground antialiased transition-colors duration-300">
       {/* Hero Section */}
       <section id="hero" className="relative overflow-hidden pt-12 pb-16">
+        {/* Ambient dot-grid texture (fills empty space, stays subtle) */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-dot-grid"></div>
         {/* Background Gradients */}
         <div aria-hidden="true" className="absolute inset-0 isolate hidden opacity-40 dark:opacity-60 contain-strict lg:block pointer-events-none">
           <div className="w-[35rem] h-[80rem] -translate-y-[22rem] absolute left-0 top-0 -rotate-45 rounded-full bg-[radial-gradient(68.54%_68.72%_at_55.02%_31.46%,oklch(0.85_0.06_262/.14)_0,oklch(0.7_0.04_262/.05)_50%,transparent_80%)]"></div>
@@ -127,7 +129,7 @@ export default function Home() {
 
         <div className="container mx-auto max-w-7xl px-6 relative z-10">
           <div className="text-center sm:mx-auto">
-            <h1 className="animate-fade-up delay-1 text-balance font-bold text-4xl text-foreground sm:text-5xl md:text-6xl xl:text-7xl">
+            <h1 className="animate-fade-up delay-1 text-balance font-bold tracking-tighter text-4xl text-foreground sm:text-5xl md:text-6xl xl:text-7xl">
               Video to Prompt
             </h1>
             <p className="animate-fade-up delay-2 mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
@@ -270,13 +272,13 @@ export default function Home() {
               />
             </div>
             <div>
-              <h2 className="text-balance font-bold text-3xl sm:text-4xl text-foreground">{t("home.intro.title")}</h2>
+              <h2 className="text-balance font-bold tracking-tight text-3xl sm:text-4xl text-foreground">{t("home.intro.title")}</h2>
               <p className="mt-4 text-pretty text-muted-foreground leading-relaxed">
                 {t("home.intro.desc")}
               </p>
               <ul className="mt-8 space-y-6">
                 <li className="flex items-start gap-4">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <IconPlayerPlayFilled className="size-5" />
                   </span>
                   <div>
@@ -285,7 +287,7 @@ export default function Home() {
                   </div>
                 </li>
                 <li className="flex items-start gap-4">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <IconWorld className="size-5" />
                   </span>
                   <div>
@@ -294,7 +296,7 @@ export default function Home() {
                   </div>
                 </li>
                 <li className="flex items-start gap-4">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <IconShieldCheck className="size-5" />
                   </span>
                   <div>
@@ -316,7 +318,7 @@ export default function Home() {
               <span className="inline-flex items-center justify-center rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground mb-4">
                 {t("home.benefit.overviewBadge")}
               </span>
-              <h2 className="text-balance font-bold text-3xl sm:text-4xl text-foreground">{t("home.whyTitle")}</h2>
+              <h2 className="text-balance font-bold tracking-tight text-3xl sm:text-4xl text-foreground">{t("home.whyTitle")}</h2>
               <p className="mt-4 text-pretty text-muted-foreground">
                 {t("home.benefit.desc")}
               </p>
@@ -359,7 +361,7 @@ export default function Home() {
       <section id="features" className="px-4 py-16 md:py-24 border-t border-border">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center">
-            <h2 className="font-bold text-3xl sm:text-4xl text-foreground">{t("home.features.title")}</h2>
+            <h2 className="font-bold tracking-tight text-3xl sm:text-4xl text-foreground">{t("home.features.title")}</h2>
             <p className="mt-4 text-muted-foreground">{t("home.features.desc")}</p>
           </div>
 
@@ -373,7 +375,7 @@ export default function Home() {
               { title: t("home.features.interactiveAITitle"), icon: <IconRobot className="size-6" />, desc: t("home.features.interactiveAIDesc") },
             ].map((f, idx) => (
               <div key={idx} className="flex flex-col items-start">
-                <span className="flex size-12 items-center justify-center rounded-full border border-primary/30 text-primary bg-primary/5">
+                <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   {f.icon}
                 </span>
                 <h3 className="mt-5 font-semibold text-lg text-foreground">{f.title}</h3>
@@ -389,7 +391,7 @@ export default function Home() {
         <div className="container mx-auto max-w-5xl">
           <div className="text-center">
             <p className="font-semibold text-primary text-sm uppercase tracking-wider">{t("home.stats.kicker")}</p>
-            <h2 className="mt-3 font-bold text-3xl sm:text-4xl text-foreground">{t("home.whyTitle")}</h2>
+            <h2 className="mt-3 font-bold tracking-tight text-3xl sm:text-4xl text-foreground">{t("home.whyTitle")}</h2>
             <p className="mt-3 text-muted-foreground">{t("home.stats.note")}</p>
           </div>
 
@@ -417,7 +419,7 @@ export default function Home() {
       <section id="generators" className="px-4 py-16 md:py-24 border-t border-border">
         <div className="container mx-auto max-w-6xl">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-balance font-bold text-3xl sm:text-4xl text-foreground">{t("home.generators.title")}</h2>
+            <h2 className="text-balance font-bold tracking-tight text-3xl sm:text-4xl text-foreground">{t("home.generators.title")}</h2>
             <p className="mt-4 text-pretty text-muted-foreground leading-relaxed">
               {t("home.generators.desc")}
             </p>
@@ -432,7 +434,7 @@ export default function Home() {
             ].map((gen, idx) => (
               <Link key={idx} href={gen.href} className="group flex flex-col rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/50">
                 <div className="mb-4 flex items-center justify-between gap-2">
-                  <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     {gen.icon}
                   </span>
                   <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground text-xs">{gen.tag}</span>
@@ -454,7 +456,7 @@ export default function Home() {
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
             <p className="uppercase tracking-wider text-primary font-semibold text-sm">{t("home.faq.kicker")}</p>
-            <h2 className="text-balance text-2xl md:text-3xl text-foreground font-semibold mt-2">
+            <h2 className="text-balance text-2xl md:text-3xl text-foreground font-semibold tracking-tight mt-2">
               {t("home.faq.title")}
             </h2>
           </div>
@@ -485,7 +487,7 @@ export default function Home() {
       {/* Call to Action Section */}
       <section id="call-to-action" className="relative overflow-hidden px-4 py-20 md:py-28 border-t border-border bg-gradient-to-br from-primary/5 via-muted/50 to-primary/5">
         <div className="relative mx-auto max-w-5xl px-6 text-center">
-          <h2 className="text-balance text-4xl font-semibold lg:text-5xl text-foreground">
+          <h2 className="text-balance text-4xl font-semibold tracking-tight lg:text-5xl text-foreground">
             {t("home.cta.title")}
           </h2>
           <p className="mt-4 text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">

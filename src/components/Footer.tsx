@@ -139,12 +139,9 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-border py-8">
-        <div className="container mx-auto max-w-7xl px-4 flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <div className="container mx-auto max-w-7xl px-4 flex items-center justify-center">
           <span className="text-muted-foreground text-sm">
             {t("footer.rights", { year: new Date().getFullYear() })}
-          </span>
-          <span className="text-muted-foreground/80 text-xs text-center sm:text-right">
-            {t("trust.poweredBy")} · {t("trust.retention")}
           </span>
         </div>
       </div>

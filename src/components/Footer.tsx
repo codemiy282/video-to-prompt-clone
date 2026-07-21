@@ -63,6 +63,11 @@ export default function Footer() {
             <span className="text-sm font-semibold uppercase tracking-wider text-foreground">{t("footer.tools")}</span>
             <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
               <li>
+                <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {t("footer.projects")}
+                </Link>
+              </li>
+              <li>
                 <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {t("footer.videoPromptGenerator")}
                 </Link>

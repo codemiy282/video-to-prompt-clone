@@ -246,6 +246,92 @@ export async function generatePlatformPrompt(
   return result.response.text();
 }
 
+// Structured scene breakdown for the Project spine. Unlike generateStoryboard
+// (free text), this returns machine-parseable scenes the workspace can store
+// and edit individually.
+export interface RawScene {
+  heading: string;
+  description: string;
+  shotType?: string;
+  cameraMove?: string;
+  mood?: string;
+}
+
+// A delimited plain-text format (not JSON) is used deliberately: model-written
+// visual descriptions routinely contain quotes, colons, and stray punctuation
+// that break JSON parsing. Labelled blocks are immune to escaping issues.
+const SCENES_SYSTEM_PROMPT = `You are a professional film director and storyboard artist. Break the user's idea into a sequence of distinct video scenes suitable for AI video generation.
+
+Output EACH scene as a block in EXACTLY this format, and nothing else:
+
+[SCENE]
+HEADING: <a short one-line logline>
+DESCRIPTION: <a concrete visual description: subject, setting, composition, action — one line>
+SHOT: <e.g. wide, close-up, medium, aerial>
+CAMERA: <e.g. static, slow push-in, pan left, tracking>
+MOOD: <lighting/color/emotional tone in a few words>
+
+Separate scenes with a blank line. Do not number scenes. Do not add any commentary, headings, or markdown before or after the blocks. Write in English.`;
+
+const SCENE_LABELS = ["HEADING", "DESCRIPTION", "SHOT", "CAMERA", "MOOD"];
+
+// Extract a labelled field from a scene block, tolerating multi-line values by
+// reading up to the next known label (or end of block).
+function fieldOf(block: string, label: string): string {
+  const re = new RegExp(
+    `${label}\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:${SCENE_LABELS.join("|")})\\s*:|$)`,
+    "i"
+  );
+  const m = block.match(re);
+  return m ? m[1].trim().replace(/\s+/g, " ") : "";
+}
+
+function parseScenesText(text: string): RawScene[] {
+  return text
+    .split(/\[SCENE\]/i)
+    .map((b) => b.trim())
+    .filter(Boolean)
+    .map((block) => ({
+      heading: fieldOf(block, "HEADING"),
+      description: fieldOf(block, "DESCRIPTION"),
+      shotType: fieldOf(block, "SHOT") || undefined,
+      cameraMove: fieldOf(block, "CAMERA") || undefined,
+      mood: fieldOf(block, "MOOD") || undefined,
+    }))
+    .filter((s) => s.description || s.heading)
+    .slice(0, 8);
+}
+
+export async function generateScenes(
+  idea: string,
+  count = 5
+): Promise<RawScene[]> {
+  const key = getApiKey();
+  const genAI = new GoogleGenerativeAI(key);
+
+  const target = Math.min(8, Math.max(3, count));
+  const systemInstruction: Content = {
+    role: "user",
+    parts: [{ text: SCENES_SYSTEM_PROMPT }],
+  };
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
+
+  const result = await model.generateContent({
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: `Idea:\n${idea}\n\nBreak this into about ${target} scenes using the [SCENE] block format.`,
+          },
+        ],
+      },
+    ],
+  });
+
+  return parseScenesText(result.response.text());
+}
+
 // Registry-driven prompt conversion: takes one universal idea and compiles it
 // into a model-specific prompt using the capabilities in modelRegistry.ts —
 // so model claims live in ONE place, not scattered/hard-coded here.

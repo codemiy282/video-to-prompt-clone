@@ -173,6 +173,10 @@ export default function ImageToVideo() {
             <p className="animate-fade-up delay-2 mx-auto mt-5 max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
               {t("itv.subtitle")}
             </p>
+            <div className="animate-fade-up delay-3 mx-auto mt-6 flex max-w-2xl items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 text-left">
+              <IconAlertCircle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+              <p className="text-xs leading-relaxed text-muted-foreground">{t("itv.note")}</p>
+            </div>
           </div>
 
           <div className="animate-fade-up delay-3 mx-auto mt-8 max-w-3xl">

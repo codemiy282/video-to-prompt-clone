@@ -401,7 +401,7 @@ export default function Home() {
             </div>
             <div>
               <p className="font-semibold text-muted-foreground text-sm">{t("home.stats.availableIn")}</p>
-              <div className="mt-2 font-bold text-6xl text-primary tabular-nums">15</div>
+              <div className="mt-2 font-bold text-6xl text-primary tabular-nums">3</div>
               <p className="mt-2 text-muted-foreground text-sm">{t("home.stats.availableInSub")}</p>
             </div>
             <div>

@@ -13,15 +13,21 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const DESCRIPTION =
+  "Your AI video pre-production copilot. Turn any idea, clip, or image into production-ready prompts, scene breakdowns, and storyboards — so your credits go to great generations, not guesswork.";
+
 export const metadata: Metadata = {
-  title: "Video to Prompt — Turn Any Video Into Instant AI Prompts",
-  description: "Video to Prompt turns your video uploads into detailed, accurate AI prompts and text descriptions — ready for AI image and video generation.",
+  title: {
+    default: "Video to Prompt — AI Video Pre-production Copilot",
+    template: "%s · Video to Prompt",
+  },
+  description: DESCRIPTION,
   openGraph: {
     type: "website",
     siteName: "Video to Prompt",
-    title: "Video to Prompt — Turn Any Video Into Instant AI Prompts",
-    description: "Video to Prompt turns your video uploads into detailed, accurate AI prompts and text descriptions — ready for AI image and video generation.",
-  }
+    title: "Video to Prompt — AI Video Pre-production Copilot",
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({

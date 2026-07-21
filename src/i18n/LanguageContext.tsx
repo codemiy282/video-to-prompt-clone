@@ -48,6 +48,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         : defaultLocale;
     setLocaleState(initial);
     document.documentElement.lang = initial;
+    // Lock in the resolved locale on first visit so it stays stable across
+    // navigations/reloads instead of re-resolving from navigator each time.
+    if (!stored) {
+      localStorage.setItem("locale", initial);
+    }
   }, []);
 
   const setLocale = (l: Locale) => {

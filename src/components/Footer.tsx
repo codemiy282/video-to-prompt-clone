@@ -103,6 +103,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/prompt-converter" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {t("footer.converter")}
+                </Link>
+              </li>
+              <li>
                 <Link href="/models" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {t("footer.models")}
                 </Link>

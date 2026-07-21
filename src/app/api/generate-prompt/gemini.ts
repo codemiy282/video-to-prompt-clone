@@ -9,6 +9,7 @@ import {
 } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import type { DetectedType } from "./types";
+import { getModel, type InputMode } from "@/lib/modelRegistry";
 
 export const MODEL = "gemini-2.5-flash";
 
@@ -243,6 +244,55 @@ export async function generatePlatformPrompt(
   });
 
   return result.response.text();
+}
+
+// Registry-driven prompt conversion: takes one universal idea and compiles it
+// into a model-specific prompt using the capabilities in modelRegistry.ts —
+// so model claims live in ONE place, not scattered/hard-coded here.
+export async function convertToModelPrompt(
+  base: string,
+  modelId: string,
+  inputMode: InputMode
+): Promise<string> {
+  const key = getApiKey();
+  const genAI = new GoogleGenerativeAI(key);
+
+  const m = getModel(modelId);
+  const name = m?.name ?? modelId;
+  const versionLabel = m?.version ? ` (${m.version})` : "";
+  const guidance = m?.promptGuidance ?? "";
+
+  const audioLine = m?.audio
+    ? "This model supports native audio — you MAY include audio cues (dialogue, sound effects, music)."
+    : "This model has NO native audio — do NOT include audio/sound/music cues; describe visuals only.";
+
+  const modeLine =
+    inputMode === "image"
+      ? "This is an IMAGE-TO-VIDEO prompt: focus on MOTION and camera movement. Do NOT re-describe static elements already visible in the source image."
+      : "This is a TEXT-TO-VIDEO prompt: describe the full scene, subject, style, lighting, and camera.";
+
+  const systemText = [
+    `You are an elite prompt engineer specialized in ${name}${versionLabel}.`,
+    `Rewrite the user's idea into a single, production-ready ${name} prompt.`,
+    audioLine,
+    modeLine,
+    guidance ? `Platform guidance: ${guidance}` : "",
+    "Output ONLY the final prompt in English — no preamble, no explanation, no labels or quotes.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const systemInstruction: Content = {
+    role: "user",
+    parts: [{ text: systemText }],
+  };
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: `Idea:\n${base}` }] }],
+  });
+
+  return result.response.text().trim();
 }
 
 export async function analyzeYouTube(ctx: YouTubeContext): Promise<string> {

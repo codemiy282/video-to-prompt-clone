@@ -143,3 +143,27 @@ export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
 export function getModel(id: string): ModelCapability | undefined {
   return MODEL_REGISTRY.find((m) => m.id === id);
 }
+
+// Mã cảnh báo (client map sang chuỗi đã localize qua convert.warn.<code>).
+export type WarningCode = "noAudio" | "imageMotion" | "noImageInput";
+
+const AUDIO_HINT = /\b(audio|sound|sounds|music|dialogue|voice|voiceover|sfx|noise|song|soundtrack|whisper|narration)\b/i;
+
+/**
+ * Cảnh báo capability tính TOÀN cục (không cần AI) dựa trên registry: nêu chỗ
+ * prompt yêu cầu thứ model không hỗ trợ. Trả về danh sách MÃ để client localize.
+ */
+export function capabilityWarnings(
+  model: ModelCapability,
+  basePrompt: string,
+  inputMode: InputMode
+): WarningCode[] {
+  const warns: WarningCode[] = [];
+  if (!model.audio && AUDIO_HINT.test(basePrompt)) {
+    warns.push("noAudio");
+  }
+  if (inputMode === "image") {
+    warns.push(model.firstFrame ? "imageMotion" : "noImageInput");
+  }
+  return warns;
+}

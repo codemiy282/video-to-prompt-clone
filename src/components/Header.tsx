@@ -34,7 +34,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex lg:items-center lg:gap-8 flex-1 justify-center">
+          <div className="hidden lg:flex lg:items-center lg:gap-3 xl:gap-5 flex-1 justify-center">
             <div className="relative">
               <button
                 type="button"
@@ -61,6 +61,9 @@ export default function Header() {
             </Link>
             <Link href="/storyboard" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.storyboard")}
+            </Link>
+            <Link href="/prompt-converter" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              {t("nav.converter")}
             </Link>
             <Link href="/models" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.models")}
@@ -133,6 +136,9 @@ export default function Header() {
             </Link>
             <Link href="/storyboard" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.storyboard")}
+            </Link>
+            <Link href="/prompt-converter" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
+              {t("nav.converter")}
             </Link>
             <Link href="/models" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.models")}

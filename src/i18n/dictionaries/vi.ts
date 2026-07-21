@@ -10,6 +10,7 @@ const vi = {
     imageToVideo: "Ảnh sang Video",
     imageToPrompt: "Ảnh sang Prompt",
     storyboard: "Bảng phân cảnh",
+    converter: "Chuyển đổi Prompt",
     models: "Model hỗ trợ",
     feedback: "Góp ý",
     menu: "Menu",
@@ -33,6 +34,7 @@ const vi = {
     imageToVideo: "Ảnh sang Video",
     imageToPrompt: "Ảnh sang Prompt",
     storyboard: "Trình tạo Bảng phân cảnh",
+    converter: "Chuyển đổi Prompt",
     models: "Model hỗ trợ",
     privacy: "Chính sách bảo mật",
     terms: "Điều khoản dịch vụ",
@@ -216,6 +218,28 @@ const vi = {
     placeholder: "Mô tả câu chuyện hoặc kịch bản của bạn tại đây...",
     generate: "Tạo Bảng phân cảnh",
     result: "Bảng phân cảnh",
+  },
+  convert: {
+    title: "Chuyển đổi Prompt",
+    subtitle:
+      "Viết ý tưởng một lần, rồi biên dịch thành prompt riêng cho từng model video AI — kèm cảnh báo khi model không làm được điều bạn yêu cầu.",
+    promptLabel: "Ý tưởng hoặc prompt gốc",
+    promptPlaceholder: "VD: Một phi hành gia đơn độc bước qua sa mạc đỏ lúc hoàng hôn, camera đẩy vào chậm, có tiếng gió và tiếng radio rè...",
+    inputMode: "Chế độ đầu vào",
+    modeText: "Text → Video",
+    modeImage: "Ảnh → Video",
+    targets: "Model đích",
+    convert: "Chuyển đổi",
+    converting: "Đang chuyển đổi…",
+    errorFailed: "Chuyển đổi thất bại. Vui lòng thử lại.",
+    warn: {
+      noAudio:
+        "Model này không có âm thanh gốc — các gợi ý âm thanh đã bị bỏ. Hãy thêm âm thanh ở khâu hậu kỳ.",
+      imageMotion:
+        "Ảnh → Video: prompt tập trung vào chuyển động và camera, không mô tả lại ảnh nguồn.",
+      noImageInput:
+        "Model này có thể không hỗ trợ điều kiện hoá bằng ảnh — dùng hướng Text → Video sẽ ổn định hơn.",
+    },
   },
   models: {
     title: "Model hỗ trợ",

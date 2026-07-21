@@ -10,6 +10,7 @@ const en = {
     imageToVideo: "Image to Video",
     imageToPrompt: "Image to Prompt",
     storyboard: "Storyboard",
+    converter: "Prompt Converter",
     models: "Model Support",
     feedback: "Feedback",
     menu: "Menu",
@@ -33,6 +34,7 @@ const en = {
     imageToVideo: "Image to Video",
     imageToPrompt: "Image to Prompt",
     storyboard: "Storyboard Generator",
+    converter: "Prompt Converter",
     models: "Model Support",
     privacy: "Privacy Policy",
     terms: "Terms of Service",
@@ -216,6 +218,28 @@ const en = {
     placeholder: "Describe your story or script here...",
     generate: "Generate Storyboard",
     result: "Storyboard",
+  },
+  convert: {
+    title: "Prompt Converter",
+    subtitle:
+      "Write your idea once, then compile it into a prompt tailored to each AI video model — with warnings when a model can't do what you asked.",
+    promptLabel: "Your idea or base prompt",
+    promptPlaceholder: "E.g., A lone astronaut walks across a red desert at dusk, camera slowly pushing in, wind and distant static on the radio...",
+    inputMode: "Input mode",
+    modeText: "Text → Video",
+    modeImage: "Image → Video",
+    targets: "Target models",
+    convert: "Convert",
+    converting: "Converting…",
+    errorFailed: "Conversion failed. Please try again.",
+    warn: {
+      noAudio:
+        "This model has no native audio — audio/sound cues were dropped. Add sound in post-production.",
+      imageMotion:
+        "Image-to-video: the prompt focuses on motion and camera, not re-describing the source image.",
+      noImageInput:
+        "This model may not support image conditioning — a text-to-video approach is more reliable.",
+    },
   },
   models: {
     title: "Model Support",

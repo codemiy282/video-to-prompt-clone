@@ -398,7 +398,7 @@ export default function Home() {
           <div className="mt-12 grid gap-8 text-center sm:grid-cols-3">
             <div>
               <p className="font-semibold text-muted-foreground text-sm">{t("home.stats.usedBy")}</p>
-              <div className="mt-2 font-bold text-6xl text-primary tabular-nums">1000+</div>
+              <div className="mt-2 font-bold text-6xl text-primary tabular-nums">Free</div>
               <p className="mt-2 text-muted-foreground text-sm">{t("home.stats.usedBySub")}</p>
             </div>
             <div>
@@ -408,7 +408,7 @@ export default function Home() {
             </div>
             <div>
               <p className="font-semibold text-muted-foreground text-sm">{t("home.stats.completedIn")}</p>
-              <div className="mt-2 font-bold text-6xl text-primary tabular-nums">10s</div>
+              <div className="mt-2 font-bold text-6xl text-primary tabular-nums">~10s</div>
               <p className="mt-2 text-muted-foreground text-sm">{t("home.stats.completedInSub")}</p>
             </div>
           </div>

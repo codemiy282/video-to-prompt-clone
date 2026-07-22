@@ -260,6 +260,16 @@ const zh = {
     needIdea: "请先输入创意。",
     errorScenes: "无法将创意拆分成分镜，请重试。",
     errorPrompt: "无法生成提示词，请重试。",
+    bible: {
+      title: "设定集（Bible）",
+      subtitle: "反复出现的角色、物体和场景——描述一次，并在每个分镜的提示词中保持一致。",
+      character: "角色",
+      object: "物体",
+      location: "场景",
+      namePlaceholder: "名称（如：Anna、红色老爷车、咖啡馆）",
+      descPlaceholder: "需要在各分镜间保持一致的外观 / 氛围……",
+      remove: "删除条目",
+    },
   },
   convert: {
     title: "提示词转换",

@@ -260,6 +260,17 @@ const vi = {
     needIdea: "Hãy nhập ý tưởng trước.",
     errorScenes: "Không tách được ý tưởng thành cảnh. Vui lòng thử lại.",
     errorPrompt: "Không sinh được prompt. Vui lòng thử lại.",
+    bible: {
+      title: "Bible (Bộ nhất quán)",
+      subtitle:
+        "Nhân vật, vật thể, bối cảnh lặp lại — mô tả một lần và giữ nhất quán trong prompt của mọi cảnh.",
+      character: "Nhân vật",
+      object: "Vật thể",
+      location: "Bối cảnh",
+      namePlaceholder: "Tên (vd: Anna, xe cổ màu đỏ, quán cà phê)",
+      descPlaceholder: "Ngoại hình / không khí cần giữ giống nhau qua các cảnh...",
+      remove: "Xoá mục",
+    },
   },
   convert: {
     title: "Chuyển đổi Prompt",

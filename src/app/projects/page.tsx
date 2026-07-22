@@ -15,18 +15,30 @@ import {
   IconMovie,
   IconVideo,
   IconPhoto,
+  IconUser,
+  IconBox,
+  IconMapPin,
 } from "@tabler/icons-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MODEL_REGISTRY, type InputMode } from "@/lib/modelRegistry";
-import type { Project, Scene } from "@/lib/project/types";
+import type { BibleType, Project, Scene } from "@/lib/project/types";
 import {
   listProjects,
   createProject,
   saveProject,
   deleteProject,
   newSceneId,
+  newBibleId,
 } from "@/lib/project/store";
-import { exportMarkdown, exportJSON } from "@/lib/project/export";
+import { exportMarkdown, exportJSON, buildBibleContext } from "@/lib/project/export";
+
+const BIBLE_TYPES: BibleType[] = ["character", "object", "location"];
+
+function bibleIcon(type: BibleType) {
+  if (type === "character") return <IconUser className="size-3.5" />;
+  if (type === "object") return <IconBox className="size-3.5" />;
+  return <IconMapPin className="size-3.5" />;
+}
 
 export default function ProjectsPage() {
   const { t } = useLanguage();
@@ -187,9 +199,22 @@ function Workspace({
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const scenes = project.scenes.slice().sort((a, b) => a.order - b.order);
+  const bibles = project.bibles ?? [];
 
   function patch(partial: Partial<Project>) {
     onChange({ ...project, ...partial });
+  }
+
+  function addBible(type: BibleType) {
+    patch({ bibles: [...bibles, { id: newBibleId(), type, name: "", description: "" }] });
+  }
+
+  function patchBible(id: string, name: string, description: string, type: BibleType) {
+    patch({ bibles: bibles.map((b) => (b.id === id ? { id, type, name, description } : b)) });
+  }
+
+  function removeBible(id: string) {
+    patch({ bibles: bibles.filter((b) => b.id !== id) });
   }
 
   function patchScene(id: string, partial: Partial<Scene>) {
@@ -248,7 +273,7 @@ function Workspace({
   }
 
   async function generatePrompt(scene: Scene) {
-    const base = [
+    const sceneText = [
       scene.heading,
       scene.description,
       scene.shotType ? `Shot: ${scene.shotType}` : "",
@@ -257,7 +282,11 @@ function Workspace({
     ]
       .filter(Boolean)
       .join(". ");
-    if (!base.trim()) return;
+    if (!sceneText.trim()) return;
+
+    // Prepend the project bible so recurring elements stay consistent per scene.
+    const bibleCtx = buildBibleContext(project.bibles);
+    const base = bibleCtx ? `${bibleCtx}\n\nScene: ${sceneText}` : sceneText;
 
     setPromptLoadingId(scene.id);
     setError(null);
@@ -387,6 +416,71 @@ function Workspace({
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Bible — recurring elements for cross-scene consistency */}
+      <div className="mt-8">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold text-foreground">{t("project.bible.title")}</h2>
+          <p className="text-xs text-muted-foreground">{t("project.bible.subtitle")}</p>
+        </div>
+
+        {bibles.length > 0 && (
+          <div className="mb-3 space-y-2">
+            {bibles.map((b) => (
+              <div key={b.id} className="rounded-xl border border-border bg-card p-3">
+                <div className="mb-2 flex items-center gap-1.5">
+                  {BIBLE_TYPES.map((tp) => (
+                    <button
+                      key={tp}
+                      onClick={() => patchBible(b.id, b.name, b.description, tp)}
+                      className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-xs font-medium transition-colors cursor-pointer ${
+                        b.type === tp
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {bibleIcon(tp)}
+                      {t(`project.bible.${tp}`)}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => removeBible(b.id)}
+                    aria-label={t("project.bible.remove")}
+                    className="ml-auto inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer"
+                  >
+                    <IconTrash className="size-3.5" />
+                  </button>
+                </div>
+                <input
+                  value={b.name}
+                  onChange={(e) => patchBible(b.id, e.target.value, b.description, b.type)}
+                  placeholder={t("project.bible.namePlaceholder")}
+                  className="mb-1.5 w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
+                />
+                <textarea
+                  value={b.description}
+                  onChange={(e) => patchBible(b.id, b.name, e.target.value, b.type)}
+                  placeholder={t("project.bible.descPlaceholder")}
+                  className="h-16 w-full resize-none rounded-lg border border-border bg-transparent p-2.5 text-sm text-foreground outline-none focus:border-primary"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {BIBLE_TYPES.map((tp) => (
+            <button
+              key={tp}
+              onClick={() => addBible(tp)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 h-9 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            >
+              <IconPlus className="size-3.5" />
+              {t(`project.bible.${tp}`)}
+            </button>
+          ))}
         </div>
       </div>
 

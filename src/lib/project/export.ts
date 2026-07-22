@@ -2,7 +2,28 @@
 // sheet) and JSON (round-trippable data). Downloads via a transient Blob URL.
 
 import { getModel } from "@/lib/modelRegistry";
-import type { Project } from "./types";
+import type { BibleEntry, Project } from "./types";
+
+const BIBLE_LABELS: Record<BibleEntry["type"], string> = {
+  character: "Character",
+  object: "Object",
+  location: "Location",
+};
+
+/**
+ * A plain-text "consistency reference" block built from a project's bible.
+ * Prepended to each scene's prompt request so recurring characters/objects/
+ * locations are described the same way across every shot. Empty string when
+ * there are no entries.
+ */
+export function buildBibleContext(bibles: BibleEntry[] | undefined): string {
+  const entries = (bibles ?? []).filter((b) => b.name.trim() || b.description.trim());
+  if (entries.length === 0) return "";
+  const lines = entries.map(
+    (b) => `- [${BIBLE_LABELS[b.type]}] ${b.name.trim()}: ${b.description.trim()}`
+  );
+  return `Consistency references (keep these EXACTLY consistent across every scene):\n${lines.join("\n")}`;
+}
 
 function slug(s: string): string {
   return (
@@ -27,6 +48,18 @@ export function toMarkdown(project: Project): string {
     `- **Scenes:** ${project.scenes.length}`,
     ""
   );
+
+  const bibleEntries = (project.bibles ?? []).filter(
+    (b) => b.name.trim() || b.description.trim()
+  );
+  if (bibleEntries.length > 0) {
+    lines.push("## Bible — recurring elements", "");
+    bibleEntries.forEach((b) => {
+      lines.push(`- **[${BIBLE_LABELS[b.type]}] ${b.name.trim()}** — ${b.description.trim()}`);
+    });
+    lines.push("");
+  }
+
   lines.push("---", "");
 
   project.scenes

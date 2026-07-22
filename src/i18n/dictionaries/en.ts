@@ -260,6 +260,17 @@ const en = {
     needIdea: "Enter an idea first.",
     errorScenes: "Could not break this idea into scenes. Please try again.",
     errorPrompt: "Could not generate the prompt. Please try again.",
+    bible: {
+      title: "Bible",
+      subtitle:
+        "Recurring characters, objects, and locations — described once and kept consistent across every scene's prompt.",
+      character: "Character",
+      object: "Object",
+      location: "Location",
+      namePlaceholder: "Name (e.g. Anna, red vintage car, the cafe)",
+      descPlaceholder: "How it should look and feel — kept identical across scenes...",
+      remove: "Remove entry",
+    },
   },
   convert: {
     title: "Prompt Converter",

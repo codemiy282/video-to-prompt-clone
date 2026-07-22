@@ -56,6 +56,7 @@ export function createProject(title: string): Project {
     idea: "",
     targetModel: MODEL_REGISTRY[0]?.id ?? "veo",
     inputMode: "text",
+    bibles: [],
     scenes: [],
     createdAt: now,
     updatedAt: now,
@@ -80,5 +81,10 @@ export function deleteProject(id: string): void {
 
 /** Fresh scene id (exported for the workspace UI). */
 export function newSceneId(): string {
+  return newId();
+}
+
+/** Fresh bible-entry id (exported for the workspace UI). */
+export function newBibleId(): string {
   return newId();
 }

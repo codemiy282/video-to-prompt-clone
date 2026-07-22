@@ -68,6 +68,9 @@ export default function Header() {
             <Link href="/prompt-converter" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.converter")}
             </Link>
+            <Link href="/validator" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              {t("nav.validator")}
+            </Link>
             <Link href="/models" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.models")}
             </Link>
@@ -145,6 +148,9 @@ export default function Header() {
             </Link>
             <Link href="/prompt-converter" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.converter")}
+            </Link>
+            <Link href="/validator" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
+              {t("nav.validator")}
             </Link>
             <Link href="/models" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.models")}

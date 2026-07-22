@@ -351,6 +351,87 @@ export async function convertToModelPrompt(
   return result.response.text().trim();
 }
 
+// Prompt quality review. Scores a text/image-to-video prompt and returns
+// concrete, model-aware feedback so the user can improve it before spending
+// render credits. Delimited output (not JSON) for robust parsing.
+export interface ValidationCriterion {
+  name: string;
+  rating: string; // "strong" | "fair" | "weak"
+  note: string;
+}
+
+export interface ValidationResult {
+  score: number; // 0-100
+  criteria: ValidationCriterion[];
+  suggestions: string[];
+}
+
+function parseValidation(text: string): ValidationResult {
+  const scoreMatch = text.match(/SCORE:\s*(\d{1,3})/i);
+  const score = scoreMatch
+    ? Math.min(100, Math.max(0, parseInt(scoreMatch[1], 10)))
+    : 0;
+
+  const criteria: ValidationCriterion[] = [];
+  const critRe = /\[CRITERION\]\s*([^|\n]+?)\s*\|\s*([^|\n]+?)\s*\|\s*([^\n]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = critRe.exec(text)) !== null) {
+    criteria.push({
+      name: m[1].trim(),
+      rating: m[2].trim().toLowerCase(),
+      note: m[3].trim(),
+    });
+  }
+
+  const suggestions: string[] = [];
+  const sugRe = /\[SUGGESTION\]\s*([^\n]+)/gi;
+  while ((m = sugRe.exec(text)) !== null) {
+    suggestions.push(m[1].trim());
+  }
+
+  return { score, criteria, suggestions };
+}
+
+export async function validatePrompt(
+  prompt: string,
+  modelId?: string
+): Promise<ValidationResult> {
+  const key = getApiKey();
+  const genAI = new GoogleGenerativeAI(key);
+
+  const caps = modelId ? getModel(modelId) : undefined;
+  const audioLine = caps
+    ? caps.audio
+      ? `The target model (${caps.name}) supports native audio, so reward or suggest audio cues (dialogue, sound effects, music).`
+      : `The target model (${caps.name}) has NO native audio, so do NOT penalize a missing soundtrack — judge visuals only.`
+    : "No specific target model — judge as a general text-to-video prompt.";
+
+  const systemText = `You are a senior AI-video prompt reviewer. Score how likely a text/image-to-video prompt is to produce a great result, and give concrete, actionable feedback.
+
+Judge these aspects: Subject clarity, Visual detail, Composition & shot, Camera movement, Lighting & mood, Style, and Motion/action. ${audioLine}
+
+Output EXACTLY this format and nothing else:
+SCORE: <integer 0-100>
+[CRITERION] <aspect> | <strong|fair|weak> | <one concise sentence>
+(one [CRITERION] line per aspect you judged)
+[SUGGESTION] <one concrete, specific improvement>
+(between 2 and 5 [SUGGESTION] lines)
+
+Write in English. No commentary before or after.`;
+
+  const systemInstruction: Content = {
+    role: "user",
+    parts: [{ text: systemText }],
+  };
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: `Prompt to review:\n${prompt}` }] }],
+  });
+
+  return parseValidation(result.response.text());
+}
+
 export async function analyzeYouTube(ctx: YouTubeContext): Promise<string> {
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);

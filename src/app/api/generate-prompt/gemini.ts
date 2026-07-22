@@ -162,45 +162,6 @@ export async function generateStoryboard(script: string): Promise<string> {
   return result.response.text();
 }
 
-interface PlatformSpec {
-  display: string;
-  system: string;
-  format: string;
-}
-
-// Each video platform expects a different prompt shape, so every call is
-// explicitly tagged with its target platform (e.g. "CHO NỀN TẢNG Veo 3").
-const PLATFORMS: Record<string, PlatformSpec> = {
-  veo: {
-    display: "Veo 3",
-    system:
-      "You are an elite prompt engineer specialized in Google Veo 3. You write production-ready, cinematic text-to-video prompts that fully exploit Veo 3's capabilities.",
-    format:
-      "Emphasize scene descriptions, camera movement, and synchronized audio cues (dialogue, sound effects, and music) because Veo 3 generates native sound. Keep the prompt coherent and shot-focused.",
-  },
-  runway: {
-    display: "Runway",
-    system:
-      "You are an elite prompt engineer specialized in Runway Gen-3 and Gen-4. You write production-ready, cinematic text-to-video prompts that fully exploit Runway's capabilities.",
-    format:
-      "Emphasize cinematographic direction, volumetric lighting, color-grading cues, camera angles, and visual effects. Include atmosphere, texture details, and motion style.",
-  },
-  kling: {
-    display: "Kling AI",
-    system:
-      "You are an elite prompt engineer specialized in Kling AI. You write production-ready, cinematic text-to-video prompts that fully exploit Kling's capabilities.",
-    format:
-      "Emphasize cinematic camera moves, tracking shots, consistent character motion, and realistic 1080p text-to-video output. Include visual style, lighting, color palette, and camera positioning.",
-  },
-  seedance: {
-    display: "Seedance",
-    system:
-      "You are an elite prompt engineer specialized in ByteDance Seedance. You write production-ready, cinematic text-to-video prompts that fully exploit Seedance's capabilities.",
-    format:
-      "Emphasize shot-by-shot framing, smooth multi-shot motion, stable subjects, and native cinematic framing. Include scene transitions and temporal coherence.",
-  },
-};
-
 export async function generatePlatformPrompt(
   description: string,
   platform: string
@@ -208,20 +169,29 @@ export async function generatePlatformPrompt(
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);
 
-  const spec = PLATFORMS[platform];
-  const systemText =
-    spec?.system ??
-    "You are an expert prompt engineer. Transform the idea below into a detailed, well-crafted prompt for AI video generation. Focus on visual style, camera movements, lighting, mood, and composition.";
+  // Model name, version, guidance, and capabilities come from the registry
+  // (single source of truth) — never hard-coded here, so the generator pages
+  // can't drift from the /models page when a model changes version.
+  const caps = getModel(platform);
+  const display = caps ? `${caps.name}${caps.version ? ` ${caps.version}` : ""}` : platform;
 
-  const display = spec?.display ?? platform;
+  const systemText = caps
+    ? [
+        `You are an elite prompt engineer specialized in ${display}.`,
+        `You write production-ready, cinematic text-to-video prompts that fully exploit ${caps.name}'s capabilities.`,
+        caps.audio
+          ? "This model supports native audio, so you may include audio cues (dialogue, sound effects, music)."
+          : "This model has no native audio, so describe visuals only.",
+      ].join(" ")
+    : "You are an expert prompt engineer. Transform the idea below into a detailed, well-crafted prompt for AI video generation. Focus on visual style, camera movements, lighting, mood, and composition.";
 
   const lines = [
     `Tạo một prompt chi tiết và sẵn sàng sử dụng CHO NỀN TẢNG ${display}, dựa trên nội dung sau:`,
     "",
     description,
   ];
-  if (spec?.format) {
-    lines.push("", spec.format);
+  if (caps?.promptGuidance) {
+    lines.push("", caps.promptGuidance);
   }
   lines.push(
     "",

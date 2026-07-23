@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   IconPlus,
   IconTrash,
@@ -194,6 +194,7 @@ function Workspace({
 }) {
   const { t } = useLanguage();
   const [scenesLoading, setScenesLoading] = useState(false);
+  const [batchLoading, setBatchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [promptLoadingId, setPromptLoadingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -201,8 +202,18 @@ function Workspace({
   const scenes = project.scenes.slice().sort((a, b) => a.order - b.order);
   const bibles = project.bibles ?? [];
 
+  // Batch generation runs several sequential awaits inside one async closure.
+  // Each patch triggers a re-render with a new `project` prop, but the
+  // in-flight closure keeps referencing the `project` it captured at call
+  // time — so writes based on the stale value would clobber earlier writes.
+  // A ref sidesteps that: patch/patchScene always read the latest project.
+  const projectRef = useRef(project);
+  useEffect(() => {
+    projectRef.current = project;
+  }, [project]);
+
   function patch(partial: Partial<Project>) {
-    onChange({ ...project, ...partial });
+    onChange({ ...projectRef.current, ...partial });
   }
 
   function addBible(type: BibleType) {
@@ -217,9 +228,21 @@ function Workspace({
     patch({ bibles: bibles.filter((b) => b.id !== id) });
   }
 
+  // Undefined bibleIds means "applies to all" (backward-compatible default).
+  // The first toggle on a scene materializes that into an explicit list.
+  function toggleSceneBible(sceneId: string, bibleId: string) {
+    const scene = project.scenes.find((s) => s.id === sceneId);
+    if (!scene) return;
+    const current = scene.bibleIds ?? bibles.map((b) => b.id);
+    const next = current.includes(bibleId)
+      ? current.filter((id) => id !== bibleId)
+      : [...current, bibleId];
+    patchScene(sceneId, { bibleIds: next });
+  }
+
   function patchScene(id: string, partial: Partial<Scene>) {
     patch({
-      scenes: project.scenes.map((s) => (s.id === id ? { ...s, ...partial } : s)),
+      scenes: projectRef.current.scenes.map((s) => (s.id === id ? { ...s, ...partial } : s)),
     });
   }
 
@@ -272,7 +295,7 @@ function Workspace({
     }
   }
 
-  async function generatePrompt(scene: Scene) {
+  async function generatePrompt(scene: Scene): Promise<boolean> {
     const sceneText = [
       scene.heading,
       scene.description,
@@ -282,10 +305,14 @@ function Workspace({
     ]
       .filter(Boolean)
       .join(". ");
-    if (!sceneText.trim()) return;
+    if (!sceneText.trim()) return false;
 
-    // Prepend the project bible so recurring elements stay consistent per scene.
-    const bibleCtx = buildBibleContext(project.bibles);
+    // Prepend only the bible entries selected for this scene (undefined = all,
+    // for backward compatibility with scenes saved before this existed).
+    const relevantBibles = scene.bibleIds
+      ? bibles.filter((b) => scene.bibleIds!.includes(b.id))
+      : bibles;
+    const bibleCtx = buildBibleContext(relevantBibles);
     const base = bibleCtx ? `${bibleCtx}\n\nScene: ${sceneText}` : sceneText;
 
     setPromptLoadingId(scene.id);
@@ -307,13 +334,35 @@ function Workspace({
           promptModel: project.targetModel,
           warnings: data.results[0].warnings ?? [],
         });
-      } else {
-        setError(data.message || t("project.errorPrompt"));
+        return true;
       }
+      setError(data.message || t("project.errorPrompt"));
+      return false;
     } catch {
       setError(t("common.networkError"));
+      return false;
     } finally {
       setPromptLoadingId(null);
+    }
+  }
+
+  // Sequential (not parallel): respects the /api/convert-prompt rate limit and
+  // lets the per-scene spinner progress naturally from scene to scene. Stops
+  // on the first failure (e.g. rate limit) rather than firing more requests.
+  async function generateAllPrompts() {
+    const targets = scenes.filter((s) => s.description.trim());
+    if (targets.length === 0) return;
+    setBatchLoading(true);
+    setError(null);
+    let done = 0;
+    for (const scene of targets) {
+      const ok = await generatePrompt(scene);
+      if (!ok) break;
+      done++;
+    }
+    setBatchLoading(false);
+    if (done < targets.length) {
+      setError(t("project.batchPartial", { done, total: targets.length }));
     }
   }
 
@@ -507,6 +556,16 @@ function Workspace({
           <IconPlus className="size-4" />
           {t("project.addScene")}
         </button>
+        {scenes.length > 0 && (
+          <button
+            onClick={generateAllPrompts}
+            disabled={batchLoading || promptLoadingId !== null}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-4 h-11 text-sm text-foreground hover:bg-primary/10 disabled:opacity-40 transition-colors cursor-pointer"
+          >
+            {batchLoading ? <IconLoader2 className="size-4 animate-spin" /> : <IconWand className="size-4 text-primary" />}
+            {batchLoading ? t("project.generatingAll") : t("project.generateAllPrompts")}
+          </button>
+        )}
       </div>
 
       {/* Scenes */}
@@ -559,6 +618,30 @@ function Workspace({
               />
             </div>
 
+            {/* Bible — which recurring elements apply to this scene */}
+            {bibles.length > 0 && (
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">{t("project.bible.appliesTo")}</span>
+                {bibles.map((b) => {
+                  const selected = scene.bibleIds ? scene.bibleIds.includes(b.id) : true;
+                  return (
+                    <button
+                      key={b.id}
+                      onClick={() => toggleSceneBible(scene.id, b.id)}
+                      className={`inline-flex items-center gap-1 rounded-full border px-2 h-6 text-xs transition-colors cursor-pointer ${
+                        selected
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border text-muted-foreground/60 hover:text-foreground"
+                      }`}
+                    >
+                      {bibleIcon(b.type)}
+                      {b.name.trim() || t(`project.bible.${b.type}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Prompt */}
             {scene.warnings && scene.warnings.length > 0 && (
               <div className="mt-3 space-y-1.5">
@@ -600,7 +683,7 @@ function Workspace({
             <div className="mt-3">
               <button
                 onClick={() => generatePrompt(scene)}
-                disabled={promptLoadingId === scene.id || !scene.description.trim()}
+                disabled={promptLoadingId !== null || batchLoading || !scene.description.trim()}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 h-9 text-sm text-foreground hover:bg-primary/10 disabled:opacity-40 transition-colors cursor-pointer"
               >
                 {promptLoadingId === scene.id ? (

@@ -254,6 +254,9 @@ const vi = {
     mood: "Không khí / ánh sáng",
     generatePrompt: "Sinh prompt",
     generatingPrompt: "Đang sinh…",
+    generateAllPrompts: "Sinh prompt cho tất cả cảnh",
+    generatingAll: "Đang sinh tất cả…",
+    batchPartial: "Đã sinh {done}/{total} cảnh — dừng sớm (xem lỗi phía trên).",
     regenerate: "Sinh lại prompt",
     promptFor: "Prompt cho {model}",
     deleteScene: "Xoá cảnh",
@@ -272,6 +275,7 @@ const vi = {
       namePlaceholder: "Tên (vd: Anna, xe cổ màu đỏ, quán cà phê)",
       descPlaceholder: "Ngoại hình / không khí cần giữ giống nhau qua các cảnh...",
       remove: "Xoá mục",
+      appliesTo: "Áp dụng cho:",
     },
   },
   validator: {

@@ -254,6 +254,9 @@ const en = {
     mood: "Mood / lighting",
     generatePrompt: "Generate prompt",
     generatingPrompt: "Generating…",
+    generateAllPrompts: "Generate all prompts",
+    generatingAll: "Generating all…",
+    batchPartial: "Generated {done} of {total} scenes — stopped early (see error above).",
     regenerate: "Regenerate prompt",
     promptFor: "Prompt for {model}",
     deleteScene: "Delete scene",
@@ -272,6 +275,7 @@ const en = {
       namePlaceholder: "Name (e.g. Anna, red vintage car, the cafe)",
       descPlaceholder: "How it should look and feel — kept identical across scenes...",
       remove: "Remove entry",
+      appliesTo: "Applies to:",
     },
   },
   validator: {

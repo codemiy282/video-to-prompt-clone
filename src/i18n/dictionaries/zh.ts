@@ -254,6 +254,9 @@ const zh = {
     mood: "氛围 / 光线",
     generatePrompt: "生成提示词",
     generatingPrompt: "生成中……",
+    generateAllPrompts: "为所有分镜生成提示词",
+    generatingAll: "正在全部生成……",
+    batchPartial: "已生成 {done}/{total} 个分镜——提前停止（见上方错误）。",
     regenerate: "重新生成提示词",
     promptFor: "{model} 的提示词",
     deleteScene: "删除分镜",
@@ -271,6 +274,7 @@ const zh = {
       namePlaceholder: "名称（如：Anna、红色老爷车、咖啡馆）",
       descPlaceholder: "需要在各分镜间保持一致的外观 / 氛围……",
       remove: "删除条目",
+      appliesTo: "适用于：",
     },
   },
   validator: {

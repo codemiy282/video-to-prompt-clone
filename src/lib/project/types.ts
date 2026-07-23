@@ -19,6 +19,12 @@ export interface Scene {
   promptModel?: string;
   /** Capability warning codes returned alongside the prompt. */
   warnings?: string[];
+  /**
+   * Which bible entry ids apply to this scene. `undefined` means "all" —
+   * keeps older scenes (saved before per-scene selection existed) behaving
+   * exactly as before, where every bible entry was injected into every scene.
+   */
+  bibleIds?: string[];
 }
 
 export type BibleType = "character" | "object" | "location";

@@ -11,7 +11,13 @@ Làm từ trái sang phải. Xong hết checklist trong thẻ thì kéo sang c�
 # Cột 1 — Cần sửa
 
 ### Nâng Gemini lên gói trả phí
-Đang ở gói free: **5 lượt/phút cho cả website**. Có traffic là gãy. Đây là việc duy nhất còn lại ở cột này, và cần tài khoản Google của bạn nên tôi không làm thay được.
+Gói free chặn ở **hai tầng**, cả hai đều tính cho toàn bộ website chứ không phải mỗi người:
+- **5 lượt/phút** — `GenerateRequestsPerMinutePerProjectPerModel`
+- **20 lượt/NGÀY** — `GenerateRequestsPerDayPerProjectPerModel`
+
+Tầng theo ngày mới là tầng chết người: 20 lượt là hết sạch hạn mức cho cả 24 giờ, chỉ cần vài người dùng thử là site đứng im tới hôm sau. Tôi chạm trần này khi đang test.
+
+Cần tài khoản Google của bạn nên tôi không làm thay được.
 - [ ] Bật billing Google AI Studio
 - [ ] Đặt giới hạn ngân sách
 - [ ] Chốt hạn mức miễn phí mỗi người/ngày
@@ -32,8 +38,11 @@ Làm từ trái sang phải. Xong hết checklist trong thẻ thì kéo sang c�
 > Các thẻ dưới đây là phần **còn thiếu**.
 
 ### Brief đầy đủ khi tạo project
-Hiện chỉ hỏi ý tưởng + model + kiểu đầu vào.
-- [ ] Hỏi thêm: đối tượng xem, nền tảng đăng, thời lượng, tone, CTA
+- [x] Hỏi thêm: đối tượng xem, nền tảng đăng, thời lượng, tone, CTA
+- [x] Mọi ô đều không bắt buộc, chỉ ô có nội dung mới gửi đi
+- [x] Thời lượng tự suy ra số phân cảnh (~1 cảnh/4 giây), hiện ngay dưới ô nhập
+- [x] Server lọc brief, bỏ key lạ, cắt 200 ký tự mỗi ô
+- [ ] So sánh đầu ra có/không brief — kẹt vì hết quota Gemini hôm nay
 - [ ] Gợi ý 3–5 hướng nội dung để chọn
 - [ ] Chia kịch bản theo khung: Hook → Vấn đề → Giải pháp → CTA
 
@@ -46,7 +55,9 @@ Hiện thêm/xoá scene được, nhưng chưa sắp xếp hay tinh chỉnh đư
 
 ### Xuất thêm định dạng
 Markdown và JSON đã có trong `src/lib/project/export.ts`.
-- [ ] Xuất CSV
+- [x] Xuất CSV — một dòng mỗi phân cảnh, mở thẳng bằng Sheets/Excel
+- [x] Đúng chuẩn RFC 4180: bọc dấu phẩy, nhân đôi dấu nháy, xuống dòng nằm trong ô
+- [x] Có BOM UTF-8 để Excel không vỡ tiếng Việt và tiếng Trung
 - [ ] Xuất PDF storyboard
 - [ ] Link chia sẻ chỉ xem
 

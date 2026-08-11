@@ -13,6 +13,7 @@ import {
   IconFileText,
   IconFileCode,
   IconUpload,
+  IconTable,
   IconMovie,
   IconVideo,
   IconPhoto,
@@ -22,7 +23,8 @@ import {
 } from "@tabler/icons-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MODEL_REGISTRY, type InputMode } from "@/lib/modelRegistry";
-import type { BibleType, Project, Scene } from "@/lib/project/types";
+import type { BibleType, Brief, Project, Scene } from "@/lib/project/types";
+import { scenesForDuration } from "@/lib/sceneCount";
 import {
   listProjects,
   createProject,
@@ -32,9 +34,35 @@ import {
   newBibleId,
   importProject,
 } from "@/lib/project/store";
-import { exportMarkdown, exportJSON, buildBibleContext } from "@/lib/project/export";
+import { exportMarkdown, exportJSON, exportCSV, buildBibleContext } from "@/lib/project/export";
 
 const BIBLE_TYPES: BibleType[] = ["character", "object", "location"];
+
+/** One labelled text input in the brief grid. */
+function BriefField({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-muted-foreground text-xs">{label}</label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        maxLength={200}
+        className="h-10 w-full rounded-lg border-2 border-border bg-transparent px-3 text-foreground text-sm outline-none focus:border-primary"
+      />
+    </div>
+  );
+}
 
 function bibleIcon(type: BibleType) {
   if (type === "character") return <IconUser className="size-3.5" />;
@@ -253,6 +281,16 @@ function Workspace({
     projectRef.current = project;
   }, [project]);
 
+  // Merges into the existing brief so editing one field doesn't clear the rest,
+  // and drops the whole object once every field is empty.
+  function patchBrief(partial: Partial<Brief>) {
+    const next: Brief = { ...project.brief, ...partial };
+    for (const k of Object.keys(next) as (keyof Brief)[]) {
+      if (next[k] === undefined || next[k] === "") delete next[k];
+    }
+    patch({ brief: Object.keys(next).length > 0 ? next : undefined });
+  }
+
   function patch(partial: Partial<Project>) {
     onChange({ ...projectRef.current, ...partial });
   }
@@ -312,7 +350,7 @@ function Workspace({
       const res = await fetch("/api/project/scenes", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ idea: project.idea.trim() }),
+        body: JSON.stringify({ idea: project.idea.trim(), brief: project.brief }),
       });
       const data = await res.json();
       if (data.success) {
@@ -441,6 +479,14 @@ function Workspace({
             <IconFileCode className="size-4" />
             {t("project.exportJson")}
           </button>
+          <button
+            onClick={() => exportCSV(project)}
+            disabled={project.scenes.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-40"
+          >
+            <IconTable className="size-4" />
+            {t("project.exportCsv")}
+          </button>
         </div>
       </div>
 
@@ -462,6 +508,64 @@ function Workspace({
           maxLength={4000}
           className="w-full h-28 rounded-lg bg-transparent border-2 border-border p-3 text-sm focus:border-primary text-foreground resize-none outline-none"
         />
+      </div>
+
+      {/* Brief. Everything here is optional and only the filled-in parts reach
+          the model, so an idea on its own still works exactly as before. */}
+      <div className="mt-5 rounded-xl border border-border p-4">
+        <p className="font-medium text-foreground text-sm">{t("project.briefLabel")}</p>
+        <p className="mt-1 text-muted-foreground text-xs">{t("project.briefHint")}</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <BriefField
+            label={t("project.briefAudience")}
+            placeholder={t("project.briefAudiencePh")}
+            value={project.brief?.audience ?? ""}
+            onChange={(v) => patchBrief({ audience: v })}
+          />
+          <BriefField
+            label={t("project.briefPlatform")}
+            placeholder={t("project.briefPlatformPh")}
+            value={project.brief?.platform ?? ""}
+            onChange={(v) => patchBrief({ platform: v })}
+          />
+          <BriefField
+            label={t("project.briefTone")}
+            placeholder={t("project.briefTonePh")}
+            value={project.brief?.tone ?? ""}
+            onChange={(v) => patchBrief({ tone: v })}
+          />
+          <BriefField
+            label={t("project.briefCta")}
+            placeholder={t("project.briefCtaPh")}
+            value={project.brief?.cta ?? ""}
+            onChange={(v) => patchBrief({ cta: v })}
+          />
+          <div>
+            <label className="mb-1.5 block text-muted-foreground text-xs">
+              {t("project.briefDuration")}
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={600}
+              value={project.brief?.durationSeconds ?? ""}
+              onChange={(e) =>
+                patchBrief({
+                  durationSeconds: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+              placeholder="30"
+              className="h-10 w-full rounded-lg border-2 border-border bg-transparent px-3 text-foreground text-sm outline-none focus:border-primary"
+            />
+            {project.brief?.durationSeconds ? (
+              <p className="mt-1.5 text-muted-foreground text-xs">
+                {t("project.briefSceneEstimate", {
+                  count: scenesForDuration(project.brief.durationSeconds),
+                })}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       {/* Target model + input mode */}

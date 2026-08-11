@@ -25,6 +25,12 @@ export interface Scene {
    * exactly as before, where every bible entry was injected into every scene.
    */
   bibleIds?: string[];
+  /**
+   * An approved shot. Locked scenes are skipped by "generate all prompts" and
+   * their fields are read-only, so a batch run can't overwrite wording someone
+   * already settled on. Absent means unlocked.
+   */
+  locked?: boolean;
 }
 
 export type BibleType = "character" | "object" | "location";

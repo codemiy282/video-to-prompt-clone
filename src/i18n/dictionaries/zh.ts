@@ -240,6 +240,12 @@ const zh = {
     result: "故事板",
   },
   project: {
+    locked: "已锁定",
+    lockScene: "锁定此场景",
+    unlockScene: "解锁此场景",
+    moveUp: "上移场景",
+    moveDown: "下移场景",
+    duplicateScene: "复制场景",
     exportCsv: "导出 .csv",
     briefLabel: "制作简报（选填）",
     briefHint: "填写你已知的部分。只有填了的字段才会发送——仅输入创意同样可用。",

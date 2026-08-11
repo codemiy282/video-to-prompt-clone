@@ -240,6 +240,12 @@ const en = {
     result: "Storyboard",
   },
   project: {
+    locked: "Locked",
+    lockScene: "Lock this scene",
+    unlockScene: "Unlock this scene",
+    moveUp: "Move scene up",
+    moveDown: "Move scene down",
+    duplicateScene: "Duplicate scene",
     exportCsv: "Export .csv",
     briefLabel: "Production brief (optional)",
     briefHint: "Fill in what you know. Only the fields you complete are sent — an idea on its own still works.",

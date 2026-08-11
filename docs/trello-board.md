@@ -47,11 +47,12 @@ Cần tài khoản Google của bạn nên tôi không làm thay được.
 - [ ] Chia kịch bản theo khung: Hook → Vấn đề → Giải pháp → CTA
 
 ### Storyboard sửa được
-Hiện thêm/xoá scene được, nhưng chưa sắp xếp hay tinh chỉnh được.
-- [ ] Kéo thả đổi thứ tự scene
-- [ ] Tách / gộp / nhân đôi scene
-- [ ] Khoá scene đã duyệt
-- [ ] Trạng thái scene: nháp / sẵn sàng / đã duyệt
+- [x] Đổi thứ tự scene bằng nút lên/xuống, số thứ tự tự đánh lại 1..n
+- [x] Nhân đôi scene, bản sao chèn ngay dưới và luôn ở trạng thái mở khoá
+- [x] Khoá scene đã duyệt — mọi ô thành chỉ đọc, nút tạo prompt tắt
+- [x] Batch "tạo tất cả" bỏ qua scene đã khoá, không đốt quota ghi đè
+- [ ] Kéo thả bằng chuột (hiện dùng nút lên/xuống)
+- [ ] Tách một scene thành hai
 
 ### Xuất thêm định dạng
 Markdown và JSON đã có trong `src/lib/project/export.ts`.

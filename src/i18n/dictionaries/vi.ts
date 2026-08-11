@@ -240,6 +240,12 @@ const vi = {
     result: "Bảng phân cảnh",
   },
   project: {
+    locked: "Đã khoá",
+    lockScene: "Khoá phân cảnh này",
+    unlockScene: "Mở khoá phân cảnh này",
+    moveUp: "Đưa phân cảnh lên trên",
+    moveDown: "Đưa phân cảnh xuống dưới",
+    duplicateScene: "Nhân đôi phân cảnh",
     exportCsv: "Xuất .csv",
     briefLabel: "Thông tin sản xuất (không bắt buộc)",
     briefHint: "Điền những gì bạn đã biết. Chỉ những ô có nội dung mới được gửi đi — chỉ nhập ý tưởng vẫn chạy bình thường.",

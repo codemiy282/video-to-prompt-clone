@@ -14,6 +14,10 @@ import {
   IconFileCode,
   IconUpload,
   IconTable,
+  IconLock,
+  IconLockOpen,
+  IconArrowUp,
+  IconArrowDown,
   IconMovie,
   IconVideo,
   IconPhoto,
@@ -37,6 +41,11 @@ import {
 import { exportMarkdown, exportJSON, exportCSV, buildBibleContext } from "@/lib/project/export";
 
 const BIBLE_TYPES: BibleType[] = ["character", "object", "location"];
+
+/** Rewrite order to 1..n from the array's current sequence. */
+function renumber(scenes: Scene[]): Scene[] {
+  return scenes.map((s, i) => ({ ...s, order: i + 1 }));
+}
 
 /** One labelled text input in the brief grid. */
 function BriefField({
@@ -326,7 +335,38 @@ function Workspace({
   }
 
   function removeScene(id: string) {
-    patch({ scenes: project.scenes.filter((s) => s.id !== id) });
+    patch({ scenes: renumber(project.scenes.filter((s) => s.id !== id)) });
+  }
+
+  /**
+   * Move a scene one slot earlier or later. Order numbers are rewritten from
+   * the resulting sequence rather than swapped, so gaps left by deletions and
+   * duplicates never accumulate.
+   */
+  function moveScene(id: string, delta: -1 | 1) {
+    const ordered = project.scenes.slice().sort((a, b) => a.order - b.order);
+    const from = ordered.findIndex((s) => s.id === id);
+    const to = from + delta;
+    if (from < 0 || to < 0 || to >= ordered.length) return;
+    const [moved] = ordered.splice(from, 1);
+    ordered.splice(to, 0, moved);
+    patch({ scenes: renumber(ordered) });
+  }
+
+  /** Copy a scene in place, so a near-identical shot is a click, not a retype. */
+  function duplicateScene(id: string) {
+    const ordered = project.scenes.slice().sort((a, b) => a.order - b.order);
+    const at = ordered.findIndex((s) => s.id === id);
+    if (at < 0) return;
+    // The copy starts unlocked: the point of duplicating is to change it.
+    const copy: Scene = { ...ordered[at], id: newSceneId(), locked: false };
+    ordered.splice(at + 1, 0, copy);
+    patch({ scenes: renumber(ordered) });
+  }
+
+  function toggleLock(id: string) {
+    const scene = project.scenes.find((s) => s.id === id);
+    if (scene) patchScene(id, { locked: !scene.locked });
   }
 
   function addScene() {
@@ -429,7 +469,9 @@ function Workspace({
   // lets the per-scene spinner progress naturally from scene to scene. Stops
   // on the first failure (e.g. rate limit) rather than firing more requests.
   async function generateAllPrompts() {
-    const targets = scenes.filter((s) => s.description.trim());
+    // Locked scenes are approved work — a batch run must not spend a call
+    // overwriting them.
+    const targets = scenes.filter((s) => s.description.trim() && !s.locked);
     if (targets.length === 0) return;
     setBatchLoading(true);
     setError(null);
@@ -716,47 +758,99 @@ function Workspace({
       {/* Scenes */}
       <div className="mt-8 space-y-4">
         {scenes.map((scene, i) => (
-          <div key={scene.id} className="rounded-2xl border border-border bg-card p-5">
+          <div
+            key={scene.id}
+            className={`rounded-2xl border bg-card p-5 ${
+              scene.locked ? "border-primary/40 bg-primary/5" : "border-border"
+            }`}
+          >
             <div className="flex items-center justify-between gap-3 mb-3">
-              <h3 className="font-semibold text-sm text-primary">
+              <h3 className="flex items-center gap-2 font-semibold text-sm text-primary">
                 {t("project.scene", { n: i + 1 })}
+                {scene.locked && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 font-medium text-[11px]">
+                    <IconLock className="size-3" />
+                    {t("project.locked")}
+                  </span>
+                )}
               </h3>
-              <button
-                onClick={() => removeScene(scene.id)}
-                aria-label={t("project.deleteScene")}
-                className="inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer"
-              >
-                <IconTrash className="size-3.5" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => moveScene(scene.id, -1)}
+                  disabled={i === 0}
+                  aria-label={t("project.moveUp")}
+                  className="inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-30 cursor-pointer"
+                >
+                  <IconArrowUp className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => moveScene(scene.id, 1)}
+                  disabled={i === scenes.length - 1}
+                  aria-label={t("project.moveDown")}
+                  className="inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-30 cursor-pointer"
+                >
+                  <IconArrowDown className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => duplicateScene(scene.id)}
+                  aria-label={t("project.duplicateScene")}
+                  className="inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground cursor-pointer"
+                >
+                  <IconCopy className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => toggleLock(scene.id)}
+                  aria-label={scene.locked ? t("project.unlockScene") : t("project.lockScene")}
+                  className={`inline-flex items-center rounded-lg border p-1.5 transition-colors cursor-pointer ${
+                    scene.locked
+                      ? "border-primary/40 text-primary"
+                      : "border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                  }`}
+                >
+                  {scene.locked ? <IconLock className="size-3.5" /> : <IconLockOpen className="size-3.5" />}
+                </button>
+                <button
+                  onClick={() => removeScene(scene.id)}
+                  aria-label={t("project.deleteScene")}
+                  className="inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer"
+                >
+                  <IconTrash className="size-3.5" />
+                </button>
+              </div>
             </div>
 
             <input
               value={scene.heading}
+              readOnly={scene.locked}
               onChange={(e) => patchScene(scene.id, { heading: e.target.value })}
               placeholder={t("project.sceneHeading")}
-              className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50 mb-2"
+              className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50 mb-2 read-only:text-muted-foreground"
             />
             <textarea
               value={scene.description}
+              readOnly={scene.locked}
               onChange={(e) => patchScene(scene.id, { description: e.target.value })}
               placeholder={t("project.sceneDescription")}
-              className="w-full h-20 rounded-lg bg-transparent border border-border p-2.5 text-sm focus:border-primary text-foreground resize-none outline-none"
+              className="w-full h-20 rounded-lg bg-transparent border border-border p-2.5 text-sm focus:border-primary text-foreground resize-none outline-none read-only:text-muted-foreground"
             />
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 value={scene.shotType ?? ""}
+                readOnly={scene.locked}
                 onChange={(e) => patchScene(scene.id, { shotType: e.target.value })}
                 placeholder={t("project.shotType")}
                 className="rounded-lg bg-transparent border border-border px-2.5 h-9 text-sm focus:border-primary text-foreground outline-none"
               />
               <input
                 value={scene.cameraMove ?? ""}
+                readOnly={scene.locked}
                 onChange={(e) => patchScene(scene.id, { cameraMove: e.target.value })}
                 placeholder={t("project.cameraMove")}
                 className="rounded-lg bg-transparent border border-border px-2.5 h-9 text-sm focus:border-primary text-foreground outline-none"
               />
               <input
                 value={scene.mood ?? ""}
+                readOnly={scene.locked}
                 onChange={(e) => patchScene(scene.id, { mood: e.target.value })}
                 placeholder={t("project.mood")}
                 className="rounded-lg bg-transparent border border-border px-2.5 h-9 text-sm focus:border-primary text-foreground outline-none"
@@ -828,7 +922,12 @@ function Workspace({
             <div className="mt-3">
               <button
                 onClick={() => generatePrompt(scene)}
-                disabled={promptLoadingId !== null || batchLoading || !scene.description.trim()}
+                disabled={
+                  promptLoadingId !== null ||
+                  batchLoading ||
+                  !scene.description.trim() ||
+                  scene.locked
+                }
                 className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 h-9 text-sm text-foreground hover:bg-primary/10 disabled:opacity-40 transition-colors cursor-pointer"
               >
                 {promptLoadingId === scene.id ? (

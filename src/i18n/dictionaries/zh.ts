@@ -55,6 +55,22 @@ const zh = {
     generating: "生成中...",
     networkError: "网络错误，请重试。",
     requestFailed: "请求失败。",
+    retry: "重试",
+    retryIn: "{seconds} 秒后重试",
+  },
+  // 与 lib/apiError.ts 中的错误码对应。接口只返回错误码，不返回上游的技术细节，
+  // 因此错误提示会跟随用户所选语言。
+  errors: {
+    BAD_REQUEST: "请求无效，请检查输入后重试。",
+    EMPTY_INPUT: "请先输入内容。",
+    INPUT_TOO_LONG: "内容过长，请精简后重试。",
+    INVALID_URL: "这看起来不是有效的 YouTube 链接。",
+    FILE_TOO_LARGE: "文件过大，上限为 {limit}。",
+    RATE_LIMIT: "操作过于频繁，请稍后重试。",
+    UPSTREAM_BUSY: "AI 服务当前繁忙，请约 30 秒后重试。",
+    SERVICE_ERROR: "我们这边出了点问题，请重试。",
+    NETWORK: "网络错误，请检查连接后重试。",
+    UNKNOWN: "发生错误，请重试。",
   },
   home: {
     hero: {
@@ -69,7 +85,7 @@ const zh = {
     upload: {
       title: "或上传视频文件",
       loading: "正在分析…",
-      desc: "支持 MP4、MPEG/MPG、AVI、FLV、WEBM、WMV、3GPP 和 MOV 文件，最大 20 MB",
+      desc: "支持 MP4、MPEG/MPG、AVI、FLV、WEBM、WMV、3GPP 和 MOV 文件，最大 4 MB",
     },
     generating: "正在生成你的提示词…",
     result: { title: "已生成的提示词" },
@@ -141,11 +157,11 @@ const zh = {
       kicker: "Video to Prompt 常见问题",
       title: "关于 Video to Prompt 最常见的问题。",
       q1: "支持哪些视频格式？",
-      a1: "我们支持 MP4、MPEG/MPG、AVI、FLV、WEBM、WMV、3GPP 和 MOV 文件，大小不超过 20 MB。",
+      a1: "我们支持 MP4、MPEG/MPG、AVI、FLV、WEBM、WMV、3GPP 和 MOV 文件，大小不超过 4 MB。",
       q2: "我的数据安全吗？",
       a2: "是的，安全是我们的首要优先事项。你的视频文件会被安全处理，并在分析后立即删除。",
       q3: "该工具支持多种语言吗？",
-      a3: "界面提供三种语言——英语、越南语和中文——你也可以用偏好的语言生成提示词。",
+      a3: "界面提供三种语言——英语、越南语和中文。生成的提示词统一使用英语，因为视频模型（Veo、Kling、Runway、Seedance）对英文提示词的还原最稳定。提示词检测页的评价会按你选择的语言显示。",
       q4: "处理一段视频需要多久？",
       a4: "平均处理时间在 10 秒以内，具体取决于文件大小与网络连接。",
       q5: "使用该服务需要提供信用卡信息吗？",
@@ -224,6 +240,9 @@ const zh = {
     result: "故事板",
   },
   project: {
+    import: "导入 .json",
+    importInvalid: "该文件不是 Video to Prompt 的项目导出文件。",
+    storageNotice: "项目仅保存在此浏览器中，不会存放在我们的服务器上。清除站点数据或更换设备都会丢失，请导出 .json 留存备份。",
     title: "项目",
     subtitle:
       "你的前期制作工作台。让一个创意从概念走到可直接渲染的提示词——拆分成分镜、为每个分镜生成提示词、并导出制作清单。所有内容都保存在你的浏览器中。",

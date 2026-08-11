@@ -55,6 +55,22 @@ const en = {
     generating: "Generating...",
     networkError: "Network error. Please try again.",
     requestFailed: "Request failed.",
+    retry: "Try again",
+    retryIn: "Try again in {seconds}s",
+  },
+  // Keyed by the codes in lib/apiError.ts. The API returns a code, never a raw
+  // upstream message, so failures read in the user's language.
+  errors: {
+    BAD_REQUEST: "That request wasn't valid. Check your input and try again.",
+    EMPTY_INPUT: "Please enter something first.",
+    INPUT_TOO_LONG: "That text is too long. Shorten it and try again.",
+    INVALID_URL: "That doesn't look like a valid YouTube link.",
+    FILE_TOO_LARGE: "That file is too large. The limit is {limit}.",
+    RATE_LIMIT: "You're going a bit fast. Wait a moment and try again.",
+    UPSTREAM_BUSY: "The AI service is busy right now. Please try again in about 30 seconds.",
+    SERVICE_ERROR: "Something went wrong on our side. Please try again.",
+    NETWORK: "Network error. Check your connection and try again.",
+    UNKNOWN: "Something went wrong. Please try again.",
   },
   home: {
     hero: {
@@ -69,7 +85,7 @@ const en = {
     upload: {
       title: "Or upload a video file",
       loading: "Analyzing…",
-      desc: "Supports MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP, and MOV files up to 20 MB",
+      desc: "Supports MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP, and MOV files up to 4 MB",
     },
     generating: "Generating your prompt…",
     result: { title: "Generated Prompt" },
@@ -141,11 +157,11 @@ const en = {
       kicker: "Video to Prompt FAQ",
       title: "The most common questions about Video to Prompt.",
       q1: "What video formats are supported?",
-      a1: "We support MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP, and MOV files up to 20 MB in size.",
+      a1: "We support MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP, and MOV files up to 4 MB in size.",
       q2: "Is my data safe?",
       a2: "Yes, security is our top priority. Your video files are processed securely and deleted immediately after analysis.",
       q3: "Does this tool support multiple languages?",
-      a3: "The interface is available in three languages — English, Vietnamese, and Chinese — and you can generate prompts in your preferred language.",
+      a3: "The interface is available in three languages — English, Vietnamese, and Chinese. Generated prompts are written in English, because the video models (Veo, Kling, Runway, Seedance) follow English prompts most reliably. Prompt feedback in the Validator is shown in your language.",
       q4: "How long does it take to process a video?",
       a4: "The average processing time is under 10 seconds, depending on the file size and network connection.",
       q5: "Do I need to provide credit card details to use this service?",
@@ -224,6 +240,9 @@ const en = {
     result: "Storyboard",
   },
   project: {
+    import: "Import .json",
+    importInvalid: "That file isn't a Video to Prompt project export.",
+    storageNotice: "Projects are saved in this browser only — they aren't on our servers. Clearing site data or switching devices loses them, so export a .json to keep a copy.",
     title: "Projects",
     subtitle:
       "Your pre-production workspace. Carry one idea from concept to model-ready prompts — break it into scenes, generate a prompt per scene, and export your production sheet. Everything is saved in your browser.",

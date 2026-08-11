@@ -10,6 +10,7 @@ import {
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import type { DetectedType } from "./types";
 import { getModel, type InputMode } from "@/lib/modelRegistry";
+import { defaultLocale, localeInstructionNames, type Locale } from "@/i18n/config";
 
 export const MODEL = "gemini-2.5-flash";
 
@@ -394,7 +395,8 @@ function parseValidation(text: string): ValidationResult {
 
 export async function validatePrompt(
   prompt: string,
-  modelId?: string
+  modelId?: string,
+  locale: Locale = defaultLocale
 ): Promise<ValidationResult> {
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);
@@ -417,7 +419,9 @@ SCORE: <integer 0-100>
 [SUGGESTION] <one concrete, specific improvement>
 (between 2 and 5 [SUGGESTION] lines)
 
-Write in English. No commentary before or after.`;
+Keep the aspect names in English so the UI can match them, but write every note
+and suggestion in ${localeInstructionNames[locale]} — this feedback is read by
+the user, not fed to a video model. No commentary before or after.`;
 
   const systemInstruction: Content = {
     role: "user",

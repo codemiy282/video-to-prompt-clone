@@ -3,13 +3,16 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ErrorNotice from "@/components/ErrorNotice";
+import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
+import { isWithinUploadLimit } from "@/lib/uploadLimits";
 import { IconPhoto, IconVideo, IconUpload, IconPlayerPlayFilled } from "@tabler/icons-react";
 
 export default function ImageToPrompt() {
   const [activeTab, setActiveTab] = useState<"video" | "image">("image");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,16 +21,22 @@ export default function ImageToPrompt() {
   async function postPrompt(body: FormData) {
     body.append("lang", locale);
     setLoading(true);
-    setError(null);
+    setFailure(null);
     setResult(null);
     setCopied(false);
     try {
       const res = await fetch("/api/generate-prompt", { method: "POST", body });
+      // Oversized bodies are rejected by the platform before the route runs, so
+      // the response is a gateway error page rather than our JSON contract.
+      if (res.status === 413) {
+        setFailure({ code: "FILE_TOO_LARGE", retryable: false });
+        return;
+      }
       const data = await res.json();
       if (data.success) setResult(data.prompt);
-      else setError(data.error?.message || t("common.requestFailed"));
+      else setFailure(toApiFailure(data));
     } catch {
-      setError(t("common.networkError"));
+      setFailure(NETWORK_FAILURE);
     } finally {
       setLoading(false);
     }
@@ -39,8 +48,16 @@ export default function ImageToPrompt() {
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (f) setSelectedFile(f);
     e.target.value = "";
+    if (!f) return;
+    // Reject here rather than letting the upload die at the gateway.
+    if (!isWithinUploadLimit(f.size)) {
+      setSelectedFile(null);
+      setFailure({ code: "FILE_TOO_LARGE", retryable: false });
+      return;
+    }
+    setFailure(null);
+    setSelectedFile(f);
   }
 
   function handleExtract() {
@@ -148,11 +165,13 @@ export default function ImageToPrompt() {
                 </div>
               )}
 
-              {error && (
-                <div className="mx-auto mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </div>
-              )}
+              <ErrorNotice
+                failure={failure}
+                busy={loading}
+                compact
+                className="mx-auto mt-4"
+                onRetry={selectedFile ? handleExtract : undefined}
+              />
 
               {result && (
                 <div className="mx-auto mt-4 rounded-2xl border border-border bg-card p-5">

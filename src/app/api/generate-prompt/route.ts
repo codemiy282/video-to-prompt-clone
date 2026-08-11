@@ -16,13 +16,15 @@ import {
 import { extractContext, parseVideoId } from "./youtube";
 import { checkRateLimit } from "./rate-limit";
 import { errorResponse, successResponse, type DetectedType } from "./types";
+import { UPLOAD_MAX_BYTES, UPLOAD_MAX_LABEL } from "@/lib/uploadLimits";
+import { classifyUpstream } from "./upstream";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const VIDEO_MAX_BYTES = 20 * 1024 * 1024;
-const IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const VIDEO_MAX_BYTES = UPLOAD_MAX_BYTES;
+const IMAGE_MAX_BYTES = UPLOAD_MAX_BYTES;
 
 const MIME_BY_EXT: Record<string, string> = {
   mp4: "video/mp4",
@@ -90,7 +92,7 @@ export async function POST(request: Request): Promise<Response> {
     // 3a) YouTube URL mode.
     if (typeof url === "string" && url.trim().length > 0) {
       if (!parseVideoId(url)) {
-        return errorResponse("BAD_REQUEST", "The provided YouTube URL is invalid.", 400, false);
+        return errorResponse("INVALID_URL", "The provided YouTube URL is invalid.", 400, false);
       }
       const ctx = await extractContext(url);
       const prompt = await analyzeYouTube(ctx);
@@ -104,9 +106,7 @@ export async function POST(request: Request): Promise<Response> {
       if (file.size > max) {
         return errorResponse(
           "FILE_TOO_LARGE",
-          detectedType === "video"
-            ? "Video files must be 20 MB or smaller."
-            : "Image files must be 10 MB or smaller.",
+          `Files must be ${UPLOAD_MAX_LABEL} or smaller.`,
           400,
           false
         );
@@ -136,13 +136,14 @@ export async function POST(request: Request): Promise<Response> {
       false
     );
   } catch (err) {
+    // A missing/invalid key is an operator problem, not something the reader
+    // can act on — log it and answer with the same opaque code as any other
+    // upstream failure rather than echoing configuration details.
     if (err instanceof GeminiConfigError) {
-      return errorResponse("GEMINI_API_ERROR", err.message, 500, true);
+      console.error("[generate-prompt] configuration error:", err.message);
+      return errorResponse("SERVICE_ERROR", "The service is unavailable.", 503, false);
     }
-    const message =
-      err instanceof Error ? err.message : "An unexpected error occurred while generating the prompt.";
-    // Network/SDK failures are retryable; everything else is not.
-    const retryable = err instanceof Error && /fetch|network|timeout|ECONN|5\d\d/i.test(err.message);
-    return errorResponse("GEMINI_API_ERROR", message, 500, retryable);
+    const { code, status, retryable } = classifyUpstream(err, "generate-prompt");
+    return errorResponse(code, "The service is busy. Please try again.", status, retryable);
   }
 }

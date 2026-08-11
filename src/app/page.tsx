@@ -3,6 +3,9 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ErrorNotice from "@/components/ErrorNotice";
+import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
+import { isWithinUploadLimit } from "@/lib/uploadLimits";
 import {
   IconVideo,
   IconPhoto,
@@ -32,47 +35,81 @@ export default function Home() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // Holds the code, not a string, so the banner can decide whether "try again"
+  // makes sense and re-render in the reader's language.
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
+  const lastRequest = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, locale } = useLanguage();
+
+  function fail(f: ApiFailure) {
+    setFailure(f);
+  }
+
+  // Re-runs whichever request produced the current failure. A no-op when the
+  // failure came from a client-side check, which is never retryable anyway.
+  function handleRetry() {
+    lastRequest.current?.();
+  }
 
   async function postPrompt(body: FormData) {
     body.append("lang", locale);
     setLoading(true);
-    setError(null);
+    setFailure(null);
     setResult(null);
     setCopied(false);
     try {
       const res = await fetch("/api/generate-prompt", { method: "POST", body });
+      // A payload the platform rejected never reaches the route, so the body is
+      // an HTML/text error page rather than our JSON contract.
+      if (res.status === 413) {
+        fail({ code: "FILE_TOO_LARGE", retryable: false });
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         setResult(data.prompt);
       } else {
-        setError(data.error?.message || t("common.requestFailed"));
+        fail(toApiFailure(data));
       }
     } catch {
-      setError(t("common.networkError"));
+      fail(NETWORK_FAILURE);
     } finally {
       setLoading(false);
     }
   }
 
   function handleUrlSubmit() {
-    const fd = new FormData();
-    fd.append("type", "video");
-    fd.append("url", videoUrl);
-    void postPrompt(fd);
+    const run = () => {
+      const fd = new FormData();
+      fd.append("type", "video");
+      fd.append("url", videoUrl);
+      void postPrompt(fd);
+    };
+    lastRequest.current = run;
+    run();
   }
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (!f) return;
-    const fd = new FormData();
-    fd.append("file", f);
-    fd.append("type", activeTab);
-    void postPrompt(fd);
     e.target.value = "";
+    if (!f) return;
+    // Stop oversized files here: past the platform body limit the request dies
+    // before our route runs, so the user would see a raw gateway page.
+    if (!isWithinUploadLimit(f.size)) {
+      lastRequest.current = null;
+      fail({ code: "FILE_TOO_LARGE", retryable: false });
+      return;
+    }
+    const run = () => {
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("type", activeTab);
+      void postPrompt(fd);
+    };
+    lastRequest.current = run;
+    run();
   }
 
   async function handleCopy() {
@@ -230,11 +267,13 @@ export default function Home() {
                 </div>
               )}
 
-              {error && (
-                <div className="mx-auto mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </div>
-              )}
+              <ErrorNotice
+                failure={failure}
+                busy={loading}
+                compact
+                className="mx-auto mb-4"
+                onRetry={handleRetry}
+              />
 
               {result && (
                 <div className="mx-auto mb-4 rounded-2xl border border-border bg-card p-5">

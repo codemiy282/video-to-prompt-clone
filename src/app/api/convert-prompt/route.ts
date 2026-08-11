@@ -11,6 +11,7 @@
 
 import { convertToModelPrompt, GeminiConfigError } from "../generate-prompt/gemini";
 import { checkRateLimit } from "../generate-prompt/rate-limit";
+import { classifyUpstream } from "../generate-prompt/upstream";
 import {
   MODEL_REGISTRY,
   getModel,
@@ -76,7 +77,19 @@ export async function POST(request: Request): Promise<Response> {
 
   const requested = Array.isArray(body.models) ? body.models.map(String) : [];
   const models = requested.filter((id) => VALID_IDS.has(id));
-  // Không chọn model nào -> mặc định tất cả.
+  // Không gửi model nào -> mặc định tất cả. Nhưng nếu có gửi mà không id nào
+  // hợp lệ thì đó là lỗi gõ sai: báo lại thay vì âm thầm chạy cả registry, vì
+  // mỗi model là một lần gọi Gemini.
+  if (requested.length > 0 && models.length === 0) {
+    return json(
+      {
+        success: false,
+        error: "UNKNOWN_MODEL",
+        message: `Unknown model id. Valid ids: ${MODEL_REGISTRY.map((m) => m.id).join(", ")}.`,
+      },
+      400
+    );
+  }
   const targets = models.length > 0 ? models : MODEL_REGISTRY.map((m) => m.id);
 
   try {
@@ -95,9 +108,10 @@ export async function POST(request: Request): Promise<Response> {
     return json({ success: true, results }, 200);
   } catch (err) {
     if (err instanceof GeminiConfigError) {
-      return json({ success: false, error: "GEMINI_CONFIG", message: err.message }, 500);
+      console.error("[convert] configuration error:", err.message);
+      return json({ success: false, error: "SERVICE_ERROR", message: "The service is unavailable." }, 503);
     }
-    const message = err instanceof Error ? err.message : "Conversion failed.";
-    return json({ success: false, error: "CONVERT_FAILED", message }, 500);
+    const { code, status } = classifyUpstream(err, "convert");
+    return json({ success: false, error: code, message: "The service is busy. Please try again." }, status);
   }
 }

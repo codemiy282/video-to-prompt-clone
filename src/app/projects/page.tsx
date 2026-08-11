@@ -12,6 +12,7 @@ import {
   IconAlertTriangle,
   IconFileText,
   IconFileCode,
+  IconUpload,
   IconMovie,
   IconVideo,
   IconPhoto,
@@ -29,6 +30,7 @@ import {
   deleteProject,
   newSceneId,
   newBibleId,
+  importProject,
 } from "@/lib/project/store";
 import { exportMarkdown, exportJSON, buildBibleContext } from "@/lib/project/export";
 
@@ -72,6 +74,16 @@ export default function ProjectsPage() {
     if (active?.id === id) setActive(null);
   }
 
+  async function handleImport(file: File) {
+    const restored = importProject(await file.text());
+    if (!restored) {
+      window.alert(t("project.importInvalid"));
+      return;
+    }
+    refresh();
+    setActive(restored);
+  }
+
   // Persist + keep the active project in sync.
   function update(next: Project) {
     setActive(next);
@@ -106,6 +118,7 @@ export default function ProjectsPage() {
               onNew={handleNew}
               onOpen={handleOpen}
               onDelete={handleDelete}
+              onImport={handleImport}
             />
           )}
         </div>
@@ -121,13 +134,16 @@ function ProjectList({
   onNew,
   onOpen,
   onDelete,
+  onImport,
 }: {
   projects: Project[];
   onNew: () => void;
   onOpen: (p: Project) => void;
   onDelete: (id: string) => void;
+  onImport: (file: File) => void;
 }) {
   const { t } = useLanguage();
+  const importRef = useRef<HTMLInputElement>(null);
   return (
     <>
       <div className="text-center">
@@ -135,7 +151,32 @@ function ProjectList({
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">{t("project.subtitle")}</p>
       </div>
 
-      <div className="mt-10 flex justify-center">
+      {/* Projects never leave this browser, so say so where it matters — before
+          someone invests an hour in a storyboard they can't get back. */}
+      <p className="mx-auto mt-6 flex max-w-2xl items-start gap-2 rounded-xl border border-border bg-muted/40 px-4 py-3 text-muted-foreground text-xs">
+        <IconAlertTriangle className="mt-0.5 size-4 shrink-0" />
+        <span>{t("project.storageNotice")}</span>
+      </p>
+
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <button
+          onClick={() => importRef.current?.click()}
+          className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border px-6 font-medium text-foreground text-sm transition-colors hover:bg-muted"
+        >
+          <IconUpload className="size-4" />
+          {t("project.import")}
+        </button>
+        <input
+          ref={importRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) onImport(f);
+          }}
+        />
         <button
           onClick={onNew}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm h-12 px-8 hover:opacity-90 cursor-pointer transition-all"

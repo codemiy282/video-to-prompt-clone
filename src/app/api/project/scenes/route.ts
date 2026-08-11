@@ -10,6 +10,7 @@
 
 import { generateScenes, GeminiConfigError } from "../../generate-prompt/gemini";
 import { checkRateLimit } from "../../generate-prompt/rate-limit";
+import { classifyUpstream } from "../../generate-prompt/upstream";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,16 +70,17 @@ export async function POST(request: Request): Promise<Response> {
     const scenes = await generateScenes(idea, count);
     if (scenes.length === 0) {
       return json(
-        { success: false, error: "NO_SCENES", message: "Could not break this idea into scenes. Try rephrasing." },
+        { success: false, error: "SERVICE_ERROR", message: "Could not break this idea into scenes." },
         502
       );
     }
     return json({ success: true, scenes }, 200);
   } catch (err) {
     if (err instanceof GeminiConfigError) {
-      return json({ success: false, error: "GEMINI_CONFIG", message: err.message }, 500);
+      console.error("[scenes] configuration error:", err.message);
+      return json({ success: false, error: "SERVICE_ERROR", message: "The service is unavailable." }, 503);
     }
-    const message = err instanceof Error ? err.message : "Scene generation failed.";
-    return json({ success: false, error: "SCENES_FAILED", message }, 500);
+    const { code, status } = classifyUpstream(err, "scenes");
+    return json({ success: false, error: code, message: "The service is busy. Please try again." }, status);
   }
 }

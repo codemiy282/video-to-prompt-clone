@@ -11,6 +11,8 @@ import {
   IconPhoto,
 } from "@tabler/icons-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ErrorNotice from "@/components/ErrorNotice";
+import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
 import { MODEL_REGISTRY, type InputMode } from "@/lib/modelRegistry";
 
 interface ConvertResult {
@@ -29,7 +31,7 @@ export default function PromptConverterPage() {
   );
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ConvertResult[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   function toggleModel(id: string) {
@@ -44,7 +46,7 @@ export default function PromptConverterPage() {
   async function handleConvert() {
     if (!prompt.trim() || selected.size === 0) return;
     setLoading(true);
-    setError(null);
+    setFailure(null);
     setResults(null);
     try {
       const res = await fetch("/api/convert-prompt", {
@@ -58,9 +60,9 @@ export default function PromptConverterPage() {
       });
       const data = await res.json();
       if (data.success) setResults(data.results);
-      else setError(data.message || t("convert.errorFailed"));
+      else setFailure(toApiFailure(data));
     } catch {
-      setError(t("common.networkError"));
+      setFailure(NETWORK_FAILURE);
     } finally {
       setLoading(false);
     }
@@ -141,11 +143,12 @@ export default function PromptConverterPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
+            <ErrorNotice
+              failure={failure}
+              busy={loading}
+              compact
+              onRetry={handleConvert}
+            />
 
             <button
               type="button"

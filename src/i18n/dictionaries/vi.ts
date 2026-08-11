@@ -55,6 +55,22 @@ const vi = {
     generating: "Đang tạo...",
     networkError: "Lỗi mạng. Vui lòng thử lại.",
     requestFailed: "Yêu cầu thất bại.",
+    retry: "Thử lại",
+    retryIn: "Thử lại sau {seconds} giây",
+  },
+  // Khớp theo mã lỗi trong lib/apiError.ts. API chỉ trả mã, không trả thông báo
+  // kỹ thuật, nên lỗi hiện ra đúng ngôn ngữ người dùng đang chọn.
+  errors: {
+    BAD_REQUEST: "Yêu cầu không hợp lệ. Kiểm tra lại dữ liệu bạn nhập.",
+    EMPTY_INPUT: "Bạn hãy nhập nội dung trước đã.",
+    INPUT_TOO_LONG: "Nội dung quá dài. Rút ngắn lại rồi thử lại.",
+    INVALID_URL: "Đây không giống một liên kết YouTube hợp lệ.",
+    FILE_TOO_LARGE: "Tệp quá lớn. Giới hạn là {limit}.",
+    RATE_LIMIT: "Bạn thao tác hơi nhanh. Chờ một chút rồi thử lại.",
+    UPSTREAM_BUSY: "Dịch vụ AI đang bận. Vui lòng thử lại sau khoảng 30 giây.",
+    SERVICE_ERROR: "Có lỗi từ phía chúng tôi. Vui lòng thử lại.",
+    NETWORK: "Lỗi mạng. Kiểm tra kết nối rồi thử lại.",
+    UNKNOWN: "Đã có lỗi xảy ra. Vui lòng thử lại.",
   },
   home: {
     hero: {
@@ -69,7 +85,7 @@ const vi = {
     upload: {
       title: "Hoặc tải lên một tệp video",
       loading: "Đang phân tích…",
-      desc: "Hỗ trợ các tệp MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP và MOV tối đa 20 MB",
+      desc: "Hỗ trợ các tệp MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP và MOV tối đa 4 MB",
     },
     generating: "Đang tạo prompt của bạn…",
     result: { title: "Prompt đã tạo" },
@@ -141,11 +157,11 @@ const vi = {
       kicker: "Câu hỏi thường gặp Video to Prompt",
       title: "Những câu hỏi phổ biến nhất về Video to Prompt.",
       q1: "Các định dạng video nào được hỗ trợ?",
-      a1: "Chúng tôi hỗ trợ các tệp MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP và MOV với kích thước tối đa 20 MB.",
+      a1: "Chúng tôi hỗ trợ các tệp MP4, MPEG/MPG, AVI, FLV, WEBM, WMV, 3GPP và MOV với kích thước tối đa 4 MB.",
       q2: "Dữ liệu của tôi có an toàn không?",
       a2: "Có, bảo mật là ưu tiên hàng đầu của chúng tôi. Tệp video của bạn được xử lý bảo mật và xóa ngay sau khi phân tích.",
       q3: "Công cụ này có hỗ trợ nhiều ngôn ngữ không?",
-      a3: "Giao diện có ba ngôn ngữ — Tiếng Anh, Tiếng Việt và Tiếng Trung — và bạn có thể tạo prompt bằng ngôn ngữ mình muốn.",
+      a3: "Giao diện có ba ngôn ngữ — Tiếng Anh, Tiếng Việt và Tiếng Trung. Prompt tạo ra luôn viết bằng tiếng Anh, vì các model video (Veo, Kling, Runway, Seedance) bám theo prompt tiếng Anh chuẩn hơn. Riêng phần nhận xét ở trang Kiểm tra Prompt sẽ hiện theo ngôn ngữ bạn chọn.",
       q4: "Xử lý một video mất bao lâu?",
       a4: "Thời gian xử lý trung bình dưới 10 giây, tùy thuộc vào kích thước tệp và kết nối mạng.",
       q5: "Tôi có cần cung cấp thông tin thẻ tín dụng để sử dụng dịch vụ không?",
@@ -224,6 +240,9 @@ const vi = {
     result: "Bảng phân cảnh",
   },
   project: {
+    import: "Nhập .json",
+    importInvalid: "Tệp này không phải bản xuất project của Video to Prompt.",
+    storageNotice: "Project chỉ được lưu trong trình duyệt này, không nằm trên máy chủ của chúng tôi. Xoá dữ liệu trang hoặc đổi máy là mất. Hãy xuất tệp .json để giữ một bản.",
     title: "Dự án",
     subtitle:
       "Không gian tiền kỳ của bạn. Mang một ý tưởng đi từ concept đến prompt sẵn-sàng-render — tách thành cảnh, sinh prompt cho từng cảnh, và export bản kế hoạch sản xuất. Mọi thứ lưu ngay trong trình duyệt của bạn.",

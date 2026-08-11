@@ -4,12 +4,14 @@ import { useState } from "react";
 import { IconVideo, IconArrowLeft, IconLoader2, IconCopy, IconCheck } from "@tabler/icons-react";
 import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ErrorNotice from "@/components/ErrorNotice";
+import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
 
 export default function SeedanceGenerator() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
   const [copied, setCopied] = useState(false);
   const { t, locale } = useLanguage();
   const name = t("home.generators.seedanceTag");
@@ -17,7 +19,7 @@ export default function SeedanceGenerator() {
   async function handleGenerate() {
     if (!text.trim()) return;
     setLoading(true);
-    setError(null);
+    setFailure(null);
     setResult(null);
     try {
       const fd = new FormData();
@@ -27,9 +29,9 @@ export default function SeedanceGenerator() {
       const res = await fetch("/api/generate-prompt", { method: "POST", body: fd });
       const data = await res.json();
       if (data.success) setResult(data.prompt);
-      else setError(data.error?.message || t("common.requestFailed"));
+      else setFailure(toApiFailure(data));
     } catch {
-      setError(t("common.networkError"));
+      setFailure(NETWORK_FAILURE);
     } finally {
       setLoading(false);
     }
@@ -77,12 +79,12 @@ export default function SeedanceGenerator() {
               {loading ? t("common.generating") : t("gen.generate", { name })}
             </button>
           </div>
-          {error && (
-            <div className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-red-600 dark:text-red-400">
-              <p className="font-medium">{t("common.error")}</p>
-              <p className="mt-1 text-sm">{error}</p>
-            </div>
-          )}
+          <ErrorNotice
+              failure={failure}
+              busy={loading}
+              className="mt-6 rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-red-600 dark:text-red-400"
+              onRetry={handleGenerate}
+            />
           {result && (
             <div className="mt-6 rounded-2xl border border-border bg-card p-6">
               <div className="flex items-center justify-between mb-4">

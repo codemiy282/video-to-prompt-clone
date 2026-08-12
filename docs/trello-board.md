@@ -134,7 +134,7 @@ Hiện `/blog`, `/guide` đều 404.
 - [x] Link YouTube → mô tả đúng nội dung thật
 - [x] Upload ảnh → mô tả đúng ảnh
 - [x] Có giới hạn tần suất theo IP
-- [ ] File lớn vẫn chết → xem thẻ "Upload quá 4.5 MB"
+- [x] File lớn đã chạy — video >4 MB tự cắt khung hình trên trình duyệt
 
 ### Chia ý tưởng thành scene
 - [x] 2 ý tưởng khác nhau → 2 kết quả khác hẳn
@@ -157,7 +157,7 @@ Hiện `/blog`, `/guide` đều 404.
 - [x] Không còn chuỗi bỏ quên tiếng Anh (trừ tên riêng Kling/Runway/Seedance/Veo)
 - [x] Đổi ngôn ngữ trên live chạy đúng, `<html lang>` đổi theo
 - [x] Mọi trang đều dùng dictionary, không hardcode
-- [ ] Thông báo lỗi và prompt đầu ra chưa theo ngôn ngữ → xem cột 1
+- [x] Thông báo lỗi đã theo ngôn ngữ; prompt giữ tiếng Anh là quyết định có chủ ý, FAQ đã nói rõ
 
 ### Privacy & Terms
 - [x] Hết 404

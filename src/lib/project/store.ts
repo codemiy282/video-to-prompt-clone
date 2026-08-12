@@ -107,6 +107,9 @@ export function importProject(raw: string): Project | null {
     id: newId(),
     title: typeof p.title === "string" && p.title.trim() ? p.title.trim() : "Imported project",
     idea: typeof p.idea === "string" ? p.idea : "",
+    // Carried through explicitly; omitting it silently dropped the brief on
+    // every export/import round trip and on every shared link.
+    brief: p.brief && typeof p.brief === "object" ? p.brief : undefined,
     targetModel:
       typeof p.targetModel === "string" && MODEL_REGISTRY.some((m) => m.id === p.targetModel)
         ? p.targetModel

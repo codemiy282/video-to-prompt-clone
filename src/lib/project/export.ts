@@ -158,3 +158,139 @@ export function exportJSON(project: Project): void {
 export function exportCSV(project: Project): void {
   downloadFile(`${slug(project.title)}.csv`, "text/csv;charset=utf-8", toCSV(project));
 }
+
+/** Escape text for interpolation into the print document. */
+function esc(value: string | undefined): string {
+  return (value ?? "").replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!
+  );
+}
+
+/**
+ * Build a self-contained printable storyboard.
+ *
+ * Deliberately plain HTML with its own stylesheet rather than a PDF library:
+ * every browser already renders to PDF from the print dialog, and shipping
+ * jsPDF or similar would add hundreds of kilobytes to produce a worse-looking
+ * document. `page-break-inside: avoid` keeps a scene from splitting across
+ * pages, which is the one thing that actually matters in a shot list.
+ */
+export function toPrintHTML(project: Project): string {
+  const modelName = getModel(project.targetModel)?.name ?? project.targetModel;
+  const brief = project.brief ?? {};
+  const briefRows = (
+    [
+      ["Audience", brief.audience],
+      ["Platform", brief.platform],
+      ["Runtime", brief.durationSeconds ? `${brief.durationSeconds}s` : undefined],
+      ["Tone", brief.tone],
+      ["Call to action", brief.cta],
+      ["Target model", modelName],
+    ] as const
+  )
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`)
+    .join("");
+
+  const bibles = (project.bibles ?? [])
+    .filter((b) => b.name.trim() || b.description.trim())
+    .map(
+      (b) =>
+        `<li><strong>${esc(BIBLE_LABELS[b.type])} · ${esc(b.name)}</strong>` +
+        `<span>${esc(b.description)}</span></li>`
+    )
+    .join("");
+
+  const scenes = [...project.scenes]
+    .sort((a, b) => a.order - b.order)
+    .map((s, i) => {
+      const meta = [
+        s.shotType && `Shot: ${s.shotType}`,
+        s.cameraMove && `Camera: ${s.cameraMove}`,
+        s.mood && `Mood: ${s.mood}`,
+      ]
+        .filter(Boolean)
+        .map((m) => `<span>${esc(String(m))}</span>`)
+        .join("");
+      return `<article>
+  <h2>Scene ${s.order || i + 1}${s.locked ? " · approved" : ""}</h2>
+  ${s.heading ? `<h3>${esc(s.heading)}</h3>` : ""}
+  <p>${esc(s.description)}</p>
+  ${meta ? `<div class="meta">${meta}</div>` : ""}
+  ${s.prompt ? `<pre>${esc(s.prompt)}</pre>` : ""}
+</article>`;
+    })
+    .join("");
+
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>${esc(project.title)}</title>
+<style>
+  @page { margin: 16mm; }
+  * { box-sizing: border-box; }
+  body { font: 12px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif; color: #14161a; margin: 0; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #666; margin: 0 0 18px; }
+  dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 20px; margin: 0 0 18px; }
+  dl > div { display: flex; gap: 8px; }
+  dt { color: #666; min-width: 92px; }
+  dd { margin: 0; font-weight: 500; }
+  h4 { font-size: 13px; margin: 18px 0 6px; }
+  ul { margin: 0 0 18px; padding-left: 16px; }
+  li span { display: block; color: #444; }
+  article { page-break-inside: avoid; border-top: 1px solid #d8d8d8; padding: 12px 0; }
+  h2 { font-size: 13px; color: #555; margin: 0 0 2px; text-transform: uppercase; letter-spacing: .04em; }
+  h3 { font-size: 15px; margin: 0 0 4px; }
+  article p { margin: 0 0 8px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .meta span { border: 1px solid #d8d8d8; border-radius: 4px; padding: 1px 7px; color: #555; font-size: 11px; }
+  pre { white-space: pre-wrap; word-wrap: break-word; background: #f5f5f4; border-radius: 6px;
+        padding: 9px 11px; margin: 0; font: 11px/1.55 ui-monospace, Menlo, Consolas, monospace; }
+</style></head>
+<body>
+  <h1>${esc(project.title)}</h1>
+  <p class="sub">${esc(project.idea)}</p>
+  ${briefRows ? `<dl>${briefRows}</dl>` : ""}
+  ${bibles ? `<h4>Consistency references</h4><ul>${bibles}</ul>` : ""}
+  ${scenes}
+</body></html>`;
+}
+
+/**
+ * Open the print dialog on a printable copy of the project, where the user
+ * picks "Save as PDF".
+ *
+ * Rendered in a hidden iframe rather than a popup: popups are commonly blocked,
+ * and an iframe cannot be. The frame is removed once the dialog closes.
+ */
+export function exportPDF(project: Project): void {
+  if (typeof window === "undefined") return;
+
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+  document.body.appendChild(frame);
+
+  const doc = frame.contentDocument;
+  if (!doc) {
+    frame.remove();
+    return;
+  }
+  doc.open();
+  doc.write(toPrintHTML(project));
+  doc.close();
+
+  const win = frame.contentWindow;
+  if (!win) {
+    frame.remove();
+    return;
+  }
+  // Printing is synchronous, but the frame must outlive the dialog on browsers
+  // that return immediately, so removal is deferred rather than inlined.
+  const cleanup = () => setTimeout(() => frame.remove(), 500);
+  win.addEventListener("afterprint", cleanup, { once: true });
+  win.focus();
+  win.print();
+  // Fallback for browsers that never fire afterprint.
+  setTimeout(cleanup, 60_000);
+}

@@ -18,17 +18,31 @@ import {
   IconLockOpen,
   IconArrowUp,
   IconArrowDown,
+  IconGripVertical,
+  IconCut,
+  IconPrinter,
   IconMovie,
   IconVideo,
   IconPhoto,
   IconUser,
   IconBox,
   IconMapPin,
+  IconEye,
+  IconShare,
 } from "@tabler/icons-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MODEL_REGISTRY, type InputMode } from "@/lib/modelRegistry";
 import type { BibleType, Brief, Project, Scene } from "@/lib/project/types";
 import { scenesForDuration } from "@/lib/sceneCount";
+import {
+  renumber,
+  ordered,
+  reorder,
+  nudge,
+  duplicate as duplicateScene_,
+  split,
+  canSplit,
+} from "@/lib/project/scenes";
 import {
   listProjects,
   createProject,
@@ -38,14 +52,16 @@ import {
   newBibleId,
   importProject,
 } from "@/lib/project/store";
-import { exportMarkdown, exportJSON, exportCSV, buildBibleContext } from "@/lib/project/export";
+import {
+  exportMarkdown,
+  exportJSON,
+  exportCSV,
+  exportPDF,
+  buildBibleContext,
+} from "@/lib/project/export";
+import { buildShareLink, readShareLink, shareSupported, ShareTooLargeError } from "@/lib/project/share";
 
 const BIBLE_TYPES: BibleType[] = ["character", "object", "location"];
-
-/** Rewrite order to 1..n from the array's current sequence. */
-function renumber(scenes: Scene[]): Scene[] {
-  return scenes.map((s, i) => ({ ...s, order: i + 1 }));
-}
 
 /** One labelled text input in the brief grid. */
 function BriefField({
@@ -85,10 +101,44 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [active, setActive] = useState<Project | null>(null);
 
+  // A project carried in the URL fragment. Held separately from `active` so a
+  // shared copy is never written to this browser's own project list unless the
+  // reader explicitly saves it.
+  const [shared, setShared] = useState<Project | null>(null);
+
   useEffect(() => {
     setMounted(true);
     setProjects(listProjects());
+
+    const open = () => {
+      void readShareLink(window.location.hash).then((p) => {
+        if (p) setShared(p);
+      });
+    };
+    open();
+    // Pasting a share link while already on this page only changes the hash,
+    // which is a same-document navigation — no reload, so nothing else would
+    // notice it.
+    window.addEventListener("hashchange", open);
+    return () => window.removeEventListener("hashchange", open);
   }, []);
+
+  /** Take a shared project as your own, then drop the link state. */
+  function keepShared() {
+    if (!shared) return;
+    const mine = importProject(JSON.stringify(shared));
+    setShared(null);
+    history.replaceState(null, "", window.location.pathname);
+    if (mine) {
+      refresh();
+      setActive(mine);
+    }
+  }
+
+  function dismissShared() {
+    setShared(null);
+    history.replaceState(null, "", window.location.pathname);
+  }
 
   function refresh() {
     setProjects(listProjects());
@@ -140,7 +190,27 @@ export default function ProjectsPage() {
     <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-300">
       <section className="pt-12 pb-20">
         <div className="container mx-auto max-w-4xl px-6">
-          {active ? (
+          {shared ? (
+            <>
+              <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 px-4 py-3">
+                <IconEye className="size-4 shrink-0 text-primary" />
+                <span className="flex-1 text-foreground text-sm">{t("project.sharedBanner")}</span>
+                <button
+                  onClick={keepShared}
+                  className="inline-flex h-9 cursor-pointer items-center rounded-lg bg-primary px-4 font-medium text-primary-foreground text-sm hover:opacity-90"
+                >
+                  {t("project.sharedKeep")}
+                </button>
+                <button
+                  onClick={dismissShared}
+                  className="inline-flex h-9 cursor-pointer items-center rounded-lg border border-border px-4 text-muted-foreground text-sm hover:text-foreground"
+                >
+                  {t("project.sharedDismiss")}
+                </button>
+              </div>
+              <Workspace project={shared} readOnly onBack={dismissShared} onChange={() => {}} />
+            </>
+          ) : active ? (
             <Workspace
               project={active}
               onBack={() => {
@@ -265,10 +335,13 @@ function Workspace({
   project,
   onBack,
   onChange,
+  readOnly = false,
 }: {
   project: Project;
   onBack: () => void;
   onChange: (p: Project) => void;
+  /** Viewing someone else's shared link: show everything, change nothing. */
+  readOnly?: boolean;
 }) {
   const { t } = useLanguage();
   const [scenesLoading, setScenesLoading] = useState(false);
@@ -276,8 +349,12 @@ function Workspace({
   const [error, setError] = useState<string | null>(null);
   const [promptLoadingId, setPromptLoadingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // Index of the card being dragged, and the one it would land on.
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [sharedCopied, setSharedCopied] = useState(false);
 
-  const scenes = project.scenes.slice().sort((a, b) => a.order - b.order);
+  const scenes = ordered(project.scenes);
   const bibles = project.bibles ?? [];
 
   // Batch generation runs several sequential awaits inside one async closure.
@@ -301,6 +378,9 @@ function Workspace({
   }
 
   function patch(partial: Partial<Project>) {
+    // Single choke point: a shared link is a view, so no edit can reach state
+    // even if a control somehow stays interactive.
+    if (readOnly) return;
     onChange({ ...projectRef.current, ...partial });
   }
 
@@ -338,30 +418,45 @@ function Workspace({
     patch({ scenes: renumber(project.scenes.filter((s) => s.id !== id)) });
   }
 
-  /**
-   * Move a scene one slot earlier or later. Order numbers are rewritten from
-   * the resulting sequence rather than swapped, so gaps left by deletions and
-   * duplicates never accumulate.
-   */
   function moveScene(id: string, delta: -1 | 1) {
-    const ordered = project.scenes.slice().sort((a, b) => a.order - b.order);
-    const from = ordered.findIndex((s) => s.id === id);
-    const to = from + delta;
-    if (from < 0 || to < 0 || to >= ordered.length) return;
-    const [moved] = ordered.splice(from, 1);
-    ordered.splice(to, 0, moved);
-    patch({ scenes: renumber(ordered) });
+    patch({ scenes: nudge(project.scenes, id, delta) });
   }
 
-  /** Copy a scene in place, so a near-identical shot is a click, not a retype. */
   function duplicateScene(id: string) {
-    const ordered = project.scenes.slice().sort((a, b) => a.order - b.order);
-    const at = ordered.findIndex((s) => s.id === id);
-    if (at < 0) return;
-    // The copy starts unlocked: the point of duplicating is to change it.
-    const copy: Scene = { ...ordered[at], id: newSceneId(), locked: false };
-    ordered.splice(at + 1, 0, copy);
-    patch({ scenes: renumber(ordered) });
+    patch({ scenes: duplicateScene_(project.scenes, id, newSceneId()) });
+  }
+
+  function splitScene(id: string) {
+    patch({ scenes: split(project.scenes, id, newSceneId()) });
+  }
+
+  /**
+   * Put a read-only link on the clipboard. The project rides in the URL
+   * fragment, so a big one simply won't fit — say so and point at the export
+   * rather than handing over a link that arrives truncated.
+   */
+  async function handleShare() {
+    try {
+      const url = await buildShareLink(project, window.location.origin);
+      await navigator.clipboard.writeText(url);
+      setSharedCopied(true);
+      setTimeout(() => setSharedCopied(false), 2500);
+    } catch (err) {
+      setError(
+        err instanceof ShareTooLargeError
+          ? t("project.shareTooLarge")
+          : t("common.requestFailed")
+      );
+    }
+  }
+
+  /** Drop the card being dragged onto position `to`. */
+  function dropScene(to: number) {
+    const from = dragIndex;
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (from === null) return;
+    patch({ scenes: reorder(project.scenes, from, to) });
   }
 
   function toggleLock(id: string) {
@@ -529,12 +624,31 @@ function Workspace({
             <IconTable className="size-4" />
             {t("project.exportCsv")}
           </button>
+          <button
+            onClick={() => exportPDF(project)}
+            disabled={project.scenes.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-40"
+          >
+            <IconPrinter className="size-4" />
+            {t("project.exportPdf")}
+          </button>
+          {!readOnly && shareSupported() && (
+            <button
+              onClick={handleShare}
+              disabled={project.scenes.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-40"
+            >
+              {sharedCopied ? <IconCheck className="size-4 text-green-500" /> : <IconShare className="size-4" />}
+              {sharedCopied ? t("project.shareCopied") : t("project.share")}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Title */}
       <input
         value={project.title}
+        readOnly={readOnly}
         onChange={(e) => patch({ title: e.target.value })}
         placeholder={t("project.titlePlaceholder")}
         className="mt-6 w-full bg-transparent text-3xl font-bold text-foreground outline-none placeholder:text-muted-foreground/50"
@@ -545,6 +659,7 @@ function Workspace({
         <label className="block text-sm font-medium mb-2 text-foreground">{t("project.ideaLabel")}</label>
         <textarea
           value={project.idea}
+          readOnly={readOnly}
           onChange={(e) => patch({ idea: e.target.value })}
           placeholder={t("project.ideaPlaceholder")}
           maxLength={4000}
@@ -727,6 +842,7 @@ function Workspace({
       )}
 
       {/* Generate scenes */}
+      {!readOnly && (
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <button
           onClick={generateScenes}
@@ -754,18 +870,50 @@ function Workspace({
           </button>
         )}
       </div>
+      )}
 
       {/* Scenes */}
       <div className="mt-8 space-y-4">
         {scenes.map((scene, i) => (
           <div
             key={scene.id}
-            className={`rounded-2xl border bg-card p-5 ${
+            onDragOver={(e) => {
+              // Without preventDefault the browser refuses the drop.
+              e.preventDefault();
+              if (dragIndex !== null && dragOverIndex !== i) setDragOverIndex(i);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              dropScene(i);
+            }}
+            className={`rounded-2xl border bg-card p-5 transition-all ${
               scene.locked ? "border-primary/40 bg-primary/5" : "border-border"
+            } ${dragIndex === i ? "opacity-40" : ""} ${
+              dragOverIndex === i && dragIndex !== i ? "border-primary ring-2 ring-primary/30" : ""
             }`}
           >
             <div className="flex items-center justify-between gap-3 mb-3">
               <h3 className="flex items-center gap-2 font-semibold text-sm text-primary">
+                {/* Only the handle is draggable — making the whole card
+                    draggable would hijack text selection in its inputs. */}
+                <span
+                  draggable
+                  onDragStart={(e) => {
+                    setDragIndex(i);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragEnd={() => {
+                    setDragIndex(null);
+                    setDragOverIndex(null);
+                  }}
+                  role="button"
+                  tabIndex={-1}
+                  aria-label={t("project.dragScene")}
+                  title={t("project.dragScene")}
+                  className="cursor-grab text-muted-foreground active:cursor-grabbing"
+                >
+                  <IconGripVertical className="size-4" />
+                </span>
                 {t("project.scene", { n: i + 1 })}
                 {scene.locked && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 font-medium text-[11px]">
@@ -774,6 +922,7 @@ function Workspace({
                   </span>
                 )}
               </h3>
+              {!readOnly && (
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => moveScene(scene.id, -1)}
@@ -799,6 +948,16 @@ function Workspace({
                   <IconCopy className="size-3.5" />
                 </button>
                 <button
+                  onClick={() => splitScene(scene.id)}
+                  // Nothing to split when the description is a single sentence.
+                  disabled={scene.locked || !canSplit(scene)}
+                  aria-label={t("project.splitScene")}
+                  title={t("project.splitScene")}
+                  className="inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-30 cursor-pointer"
+                >
+                  <IconCut className="size-3.5" />
+                </button>
+                <button
                   onClick={() => toggleLock(scene.id)}
                   aria-label={scene.locked ? t("project.unlockScene") : t("project.lockScene")}
                   className={`inline-flex items-center rounded-lg border p-1.5 transition-colors cursor-pointer ${
@@ -817,18 +976,19 @@ function Workspace({
                   <IconTrash className="size-3.5" />
                 </button>
               </div>
+              )}
             </div>
 
             <input
               value={scene.heading}
-              readOnly={scene.locked}
+              readOnly={readOnly || scene.locked}
               onChange={(e) => patchScene(scene.id, { heading: e.target.value })}
               placeholder={t("project.sceneHeading")}
               className="w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50 mb-2 read-only:text-muted-foreground"
             />
             <textarea
               value={scene.description}
-              readOnly={scene.locked}
+              readOnly={readOnly || scene.locked}
               onChange={(e) => patchScene(scene.id, { description: e.target.value })}
               placeholder={t("project.sceneDescription")}
               className="w-full h-20 rounded-lg bg-transparent border border-border p-2.5 text-sm focus:border-primary text-foreground resize-none outline-none read-only:text-muted-foreground"
@@ -836,21 +996,21 @@ function Workspace({
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 value={scene.shotType ?? ""}
-                readOnly={scene.locked}
+                readOnly={readOnly || scene.locked}
                 onChange={(e) => patchScene(scene.id, { shotType: e.target.value })}
                 placeholder={t("project.shotType")}
                 className="rounded-lg bg-transparent border border-border px-2.5 h-9 text-sm focus:border-primary text-foreground outline-none"
               />
               <input
                 value={scene.cameraMove ?? ""}
-                readOnly={scene.locked}
+                readOnly={readOnly || scene.locked}
                 onChange={(e) => patchScene(scene.id, { cameraMove: e.target.value })}
                 placeholder={t("project.cameraMove")}
                 className="rounded-lg bg-transparent border border-border px-2.5 h-9 text-sm focus:border-primary text-foreground outline-none"
               />
               <input
                 value={scene.mood ?? ""}
-                readOnly={scene.locked}
+                readOnly={readOnly || scene.locked}
                 onChange={(e) => patchScene(scene.id, { mood: e.target.value })}
                 placeholder={t("project.mood")}
                 className="rounded-lg bg-transparent border border-border px-2.5 h-9 text-sm focus:border-primary text-foreground outline-none"
@@ -919,6 +1079,7 @@ function Workspace({
               </div>
             )}
 
+            {!readOnly && (
             <div className="mt-3">
               <button
                 onClick={() => generatePrompt(scene)}
@@ -938,6 +1099,7 @@ function Workspace({
                 {scene.prompt ? t("project.regenerate") : t("project.generatePrompt")}
               </button>
             </div>
+            )}
           </div>
         ))}
       </div>

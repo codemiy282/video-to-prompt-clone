@@ -51,16 +51,17 @@ Cần tài khoản Google của bạn nên tôi không làm thay được.
 - [x] Nhân đôi scene, bản sao chèn ngay dưới và luôn ở trạng thái mở khoá
 - [x] Khoá scene đã duyệt — mọi ô thành chỉ đọc, nút tạo prompt tắt
 - [x] Batch "tạo tất cả" bỏ qua scene đã khoá, không đốt quota ghi đè
-- [ ] Kéo thả bằng chuột (hiện dùng nút lên/xuống)
-- [ ] Tách một scene thành hai
+- [x] Kéo thả bằng chuột qua tay nắm riêng, nút lên/xuống vẫn giữ
+- [x] Tách một scene thành hai ở ranh giới câu
 
 ### Xuất thêm định dạng
 Markdown và JSON đã có trong `src/lib/project/export.ts`.
 - [x] Xuất CSV — một dòng mỗi phân cảnh, mở thẳng bằng Sheets/Excel
 - [x] Đúng chuẩn RFC 4180: bọc dấu phẩy, nhân đôi dấu nháy, xuống dòng nằm trong ô
 - [x] Có BOM UTF-8 để Excel không vỡ tiếng Việt và tiếng Trung
-- [ ] Xuất PDF storyboard
-- [ ] Link chia sẻ chỉ xem
+- [x] Xuất PDF qua hộp thoại in, không thêm thư viện ngoài
+- [x] Link chia sẻ chỉ xem — nén vào URL, không cần backend
+- [x] Sửa lỗi `importProject` làm rơi mất brief khi nhập lại
 
 ### Nâng cấp phân tích video
 - [ ] Chia theo timecode

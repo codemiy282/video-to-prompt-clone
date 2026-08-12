@@ -179,7 +179,18 @@ Hiện `/blog`, `/guide` đều 404.
 - [x] Chặn ngay ở trình duyệt trước khi gửi
 - [x] Bắt cả trường hợp 413 từ gateway, đổi thành thông báo dịch được
 - [x] Sửa chữ "20 MB" trên trang chủ và FAQ cả 3 ngôn ngữ
-- [ ] Về lâu dài: upload thẳng lên Google Files API để bỏ được trần 4 MB
+- [x] **Video lớn không còn bị chặn** — xem thẻ cắt keyframe
+- [x] Đã thử upload thẳng lên Google Files API: key không lộ nhưng **Google chặn CORS**, không đi được
+
+### Cắt keyframe trên trình duyệt
+Bỏ được trần 4 MB cho video mà không cần thêm dịch vụ nào.
+- [x] Rút 8 khung hình cách đều bằng `<video>` + `<canvas>`, thu nhỏ về 768px, JPEG 70%
+- [x] Video ≤ 4 MB vẫn gửi nguyên tệp (chất lượng tốt hơn: có chuyển động và âm thanh)
+- [x] Video > 4 MB tự chuyển sang khung hình, **tệp gốc không rời khỏi máy người dùng**
+- [x] Vá lỗi WebM báo `duration: Infinity` — máy quay màn hình và nhiều máy Android dính lỗi này
+- [x] Prompt hệ thống cấm bịa âm thanh và chuyển động giữa các khung
+- [x] Hiện tiến trình "Đang đọc khung hình… 3/8" vì việc này chạy trước khi gửi request
+- [x] Đo thật: video 31.5 MB → 8 khung, tổng 893 KB → Gemini trả 200 sau 23 giây
 
 ### Thông báo lỗi
 - [x] API trả mã lỗi, không còn trả message thô của Google

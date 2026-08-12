@@ -136,6 +136,45 @@ export async function analyzeFile(
   }
 }
 
+const FRAMES_SYSTEM_PROMPT = `${SYSTEM_PROMPT}
+
+You are being given an ordered set of still frames sampled evenly across one video, not separate images. Read them as a single sequence: infer the subject, setting, style and how the scene develops from first frame to last.
+
+You cannot hear the video and you cannot see the motion between frames. Describe camera movement only where consecutive frames make it evident (a change in framing, angle, or distance). Never invent dialogue, music, or sound effects.`;
+
+/**
+ * Describe a video from frames sampled in the browser.
+ *
+ * Used when the source file is too large to upload (see lib/keyframes.ts). The
+ * frames are small enough to send inline, so this skips the Files API entirely
+ * — nothing is stored server-side and there is no upload to clean up.
+ */
+export async function analyzeFrames(
+  frames: { bytes: Buffer; mimeType: string }[]
+): Promise<string> {
+  const key = getApiKey();
+  const genAI = new GoogleGenerativeAI(key);
+
+  const systemInstruction: Content = {
+    role: "user",
+    parts: [{ text: FRAMES_SYSTEM_PROMPT }],
+  };
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
+
+  const parts: Part[] = frames.map((f) => ({
+    inlineData: { mimeType: f.mimeType, data: f.bytes.toString("base64") },
+  }));
+  parts.push({
+    text: `These ${frames.length} frames are in chronological order, sampled evenly across the video. Write one AI video-generation prompt that captures the whole clip.`,
+  });
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts }],
+  });
+
+  return result.response.text();
+}
+
 const STORYBOARD_SYSTEM_PROMPT = `You are a professional storyboard artist and film director. Given a story or script, break it into a clear sequence of storyboard scenes suitable for video/animation production.
 
 For each scene provide:

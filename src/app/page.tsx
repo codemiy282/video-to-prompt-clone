@@ -6,6 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import ErrorNotice from "@/components/ErrorNotice";
 import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
 import { isWithinUploadLimit } from "@/lib/uploadLimits";
+import { extractKeyframes, KeyframeError, FRAME_COUNT } from "@/lib/keyframes";
 import {
   IconVideo,
   IconPhoto,
@@ -39,6 +40,8 @@ export default function Home() {
   // Holds the code, not a string, so the banner can decide whether "try again"
   // makes sense and re-render in the reader's language.
   const [failure, setFailure] = useState<ApiFailure | null>(null);
+  // Non-null while frames are being sampled locally, before any request goes out.
+  const [frameProgress, setFrameProgress] = useState<{ done: number; total: number } | null>(null);
   const lastRequest = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, locale } = useLanguage();
@@ -91,23 +94,55 @@ export default function Home() {
     run();
   }
 
+  /**
+   * Send a video the platform is too small to accept by sampling frames from it
+   * locally. The file itself never leaves the machine.
+   */
+  async function postFrames(f: File) {
+    setFrameProgress({ done: 0, total: FRAME_COUNT });
+    try {
+      const frames = await extractKeyframes(f, {
+        onProgress: (done, total) => setFrameProgress({ done, total }),
+      });
+      const fd = new FormData();
+      frames.forEach((fr, i) => fd.append("frames", fr.blob, `frame-${i}.jpg`));
+      fd.append("type", "video");
+      await postPrompt(fd);
+    } catch (err) {
+      // A file the browser can't decode is not something retrying fixes.
+      fail({
+        code: err instanceof KeyframeError ? "VIDEO_UNREADABLE" : "UNKNOWN",
+        retryable: false,
+      });
+    } finally {
+      setFrameProgress(null);
+    }
+  }
+
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    // Stop oversized files here: past the platform body limit the request dies
-    // before our route runs, so the user would see a raw gateway page.
-    if (!isWithinUploadLimit(f.size)) {
+
+    // Under the limit the whole file goes up, which is the better analysis:
+    // Gemini reads real motion and audio from a video, not just stills.
+    // Over it, the request would die at the gateway before our route runs, so
+    // fall back to frames rather than failing.
+    const useFrames = activeTab === "video" && !isWithinUploadLimit(f.size);
+    if (!useFrames && !isWithinUploadLimit(f.size)) {
       lastRequest.current = null;
       fail({ code: "FILE_TOO_LARGE", retryable: false });
       return;
     }
-    const run = () => {
-      const fd = new FormData();
-      fd.append("file", f);
-      fd.append("type", activeTab);
-      void postPrompt(fd);
-    };
+
+    const run = useFrames
+      ? () => void postFrames(f)
+      : () => {
+          const fd = new FormData();
+          fd.append("file", f);
+          fd.append("type", activeTab);
+          void postPrompt(fd);
+        };
     lastRequest.current = run;
     run();
   }
@@ -259,6 +294,18 @@ export default function Home() {
                   onChange={handleFileSelected}
                 />
               </div>
+
+              {/* Frame sampling runs before any request, so it needs its own
+                  progress line — the generic "generating" spinner below only
+                  appears once the upload is actually in flight. */}
+              {frameProgress && (
+                <div
+                  role="status"
+                  className="mx-auto mb-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-muted-foreground text-sm"
+                >
+                  {t("home.upload.framesProgress", frameProgress)}
+                </div>
+              )}
 
               {loading && (
                 <div className="mx-auto mb-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">

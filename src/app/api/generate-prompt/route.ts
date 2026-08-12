@@ -7,6 +7,7 @@
 
 import {
   analyzeFile,
+  analyzeFrames,
   analyzeYouTube,
   generatePlatformPrompt,
   generateStoryboard,
@@ -22,6 +23,9 @@ import { classifyUpstream } from "./upstream";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+// Upper bound on frames in one pack; the client sends FRAME_COUNT (8).
+const MAX_FRAMES = 12;
 
 const VIDEO_MAX_BYTES = UPLOAD_MAX_BYTES;
 const IMAGE_MAX_BYTES = UPLOAD_MAX_BYTES;
@@ -99,7 +103,38 @@ export async function POST(request: Request): Promise<Response> {
       return successResponse(prompt, "video", MODEL);
     }
 
-    // 3b) File upload mode.
+    // 3b) Frame-pack mode: stills sampled from a video in the browser, sent
+    // instead of the video itself so the platform body limit stops mattering.
+    const frameParts = form.getAll("frames").filter((f): f is File => f instanceof File);
+    if (frameParts.length > 0) {
+      if (frameParts.length > MAX_FRAMES) {
+        return errorResponse(
+          "BAD_REQUEST",
+          `At most ${MAX_FRAMES} frames may be sent.`,
+          400,
+          false
+        );
+      }
+      const total = frameParts.reduce((sum, f) => sum + f.size, 0);
+      if (total > UPLOAD_MAX_BYTES) {
+        return errorResponse(
+          "FILE_TOO_LARGE",
+          `Frames must total ${UPLOAD_MAX_LABEL} or less.`,
+          400,
+          false
+        );
+      }
+      const frames = await Promise.all(
+        frameParts.map(async (f) => ({
+          bytes: Buffer.from(await f.arrayBuffer()),
+          mimeType: f.type || "image/jpeg",
+        }))
+      );
+      const prompt = await analyzeFrames(frames);
+      return successResponse(prompt, "video", MODEL);
+    }
+
+    // 3c) File upload mode.
     if (file instanceof File) {
       const detectedType: DetectedType = type === "image" ? "image" : "video";
       const max = detectedType === "video" ? VIDEO_MAX_BYTES : IMAGE_MAX_BYTES;
@@ -118,7 +153,7 @@ export async function POST(request: Request): Promise<Response> {
       return successResponse(prompt, detectedType, MODEL);
     }
 
-    // 3c) Free-text mode with optional platform.
+    // 3d) Free-text mode with optional platform.
     if (typeof text === "string" && text.trim().length > 0) {
       const platform = form.get("platform");
       if (typeof platform === "string" && platform.trim().length > 0 && platform !== "storyboard") {

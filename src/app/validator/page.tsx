@@ -10,6 +10,8 @@ import {
   IconCircleX,
 } from "@tabler/icons-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import ErrorNotice from "@/components/ErrorNotice";
+import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
 import { MODEL_REGISTRY } from "@/lib/modelRegistry";
 
 interface Criterion {
@@ -38,32 +40,34 @@ function ratingStyle(rating: string): { cls: string; icon: React.ReactNode } {
 }
 
 export default function ValidatorPage() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ApiFailure | null>(null);
 
   async function handleAnalyze() {
     if (!prompt.trim()) return;
     setLoading(true);
-    setError(null);
+    setFailure(null);
     setResult(null);
     try {
       const res = await fetch("/api/validate-prompt", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: prompt.trim(), model: model ?? undefined }),
+        // The review notes are read by a person, not fed to a video model, so
+        // they come back in the reader's language.
+        body: JSON.stringify({ prompt: prompt.trim(), model: model ?? undefined, lang: locale }),
       });
       const data = await res.json();
       if (data.success) {
         setResult({ score: data.score, criteria: data.criteria, suggestions: data.suggestions });
       } else {
-        setError(data.message || t("validator.errorFailed"));
+        setFailure(toApiFailure(data));
       }
     } catch {
-      setError(t("common.networkError"));
+      setFailure(NETWORK_FAILURE);
     } finally {
       setLoading(false);
     }
@@ -125,11 +129,12 @@ export default function ValidatorPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
+            <ErrorNotice
+              failure={failure}
+              busy={loading}
+              compact
+              onRetry={handleAnalyze}
+            />
 
             <button
               type="button"

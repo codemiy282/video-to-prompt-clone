@@ -87,6 +87,53 @@ export function toJSON(project: Project): string {
   return JSON.stringify(project, null, 2);
 }
 
+/**
+ * Escape one CSV field per RFC 4180: wrap in quotes and double any inner quote.
+ * Prompts routinely contain commas, quotes and newlines, so every field is
+ * quoted rather than only the ones that look risky.
+ */
+function csvField(value: string | undefined): string {
+  return `"${(value ?? "").replace(/"/g, '""')}"`;
+}
+
+const CSV_COLUMNS = [
+  "scene",
+  "heading",
+  "description",
+  "shot_type",
+  "camera_move",
+  "mood",
+  "target_model",
+  "prompt",
+] as const;
+
+/**
+ * One row per scene, for opening in Sheets or Excel — the format a team
+ * actually plans a shoot in.
+ *
+ * Prefixed with a UTF-8 BOM because Excel otherwise reads the file as the
+ * system codepage and mangles non-ASCII headings (Vietnamese diacritics,
+ * Chinese characters). Sheets and LibreOffice ignore the BOM.
+ */
+export function toCSV(project: Project): string {
+  const rows = [...project.scenes]
+    .sort((a, b) => a.order - b.order)
+    .map((s, i) =>
+      [
+        csvField(String(s.order || i + 1)),
+        csvField(s.heading),
+        csvField(s.description),
+        csvField(s.shotType),
+        csvField(s.cameraMove),
+        csvField(s.mood),
+        csvField(getModel(s.promptModel ?? project.targetModel)?.name ?? s.promptModel),
+        csvField(s.prompt),
+      ].join(",")
+    );
+  // CRLF line endings, which is what RFC 4180 specifies and what Excel expects.
+  return "﻿" + [CSV_COLUMNS.join(","), ...rows].join("\r\n");
+}
+
 export function downloadFile(filename: string, mime: string, content: string): void {
   if (typeof window === "undefined") return;
   const blob = new Blob([content], { type: mime });
@@ -106,4 +153,8 @@ export function exportMarkdown(project: Project): void {
 
 export function exportJSON(project: Project): void {
   downloadFile(`${slug(project.title)}.json`, "application/json;charset=utf-8", toJSON(project));
+}
+
+export function exportCSV(project: Project): void {
+  downloadFile(`${slug(project.title)}.csv`, "text/csv;charset=utf-8", toCSV(project));
 }

@@ -25,6 +25,12 @@ export interface Scene {
    * exactly as before, where every bible entry was injected into every scene.
    */
   bibleIds?: string[];
+  /**
+   * An approved shot. Locked scenes are skipped by "generate all prompts" and
+   * their fields are read-only, so a batch run can't overwrite wording someone
+   * already settled on. Absent means unlocked.
+   */
+  locked?: boolean;
 }
 
 export type BibleType = "character" | "object" | "location";
@@ -41,10 +47,32 @@ export interface BibleEntry {
   description: string;
 }
 
+/**
+ * The production context around an idea. An idea alone ("a pho cooking video")
+ * leaves the model guessing at length, platform and tone, so the same input
+ * produced scenes that suited nobody in particular. Every field is optional:
+ * projects saved before the brief existed stay valid, and the scene breakdown
+ * only mentions the parts that were filled in.
+ */
+export interface Brief {
+  /** Who is watching, e.g. "villa owners, 35-55". */
+  audience?: string;
+  /** Where it will be posted — drives aspect ratio and pacing conventions. */
+  platform?: string;
+  /** Total runtime in seconds. Drives how many scenes are worth generating. */
+  durationSeconds?: number;
+  /** Desired feel, e.g. "premium, trustworthy". */
+  tone?: string;
+  /** The action the viewer should take at the end. */
+  cta?: string;
+}
+
 export interface Project {
   id: string;
   title: string;
   idea: string;
+  /** Production context for the idea. Absent on projects predating the brief. */
+  brief?: Brief;
   /** Default target model id (from MODEL_REGISTRY). */
   targetModel: string;
   inputMode: InputMode;

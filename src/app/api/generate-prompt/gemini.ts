@@ -10,6 +10,8 @@ import {
 import { GoogleAIFileManager } from "@google/generative-ai/server";
 import type { DetectedType } from "./types";
 import { getModel, type InputMode } from "@/lib/modelRegistry";
+import { defaultLocale, localeInstructionNames, type Locale } from "@/i18n/config";
+import { clampSceneCount, MAX_SCENES } from "@/lib/sceneCount";
 
 export const MODEL = "gemini-2.5-flash";
 
@@ -132,6 +134,45 @@ export async function analyzeFile(
       // Best-effort cleanup; ignore failures.
     }
   }
+}
+
+const FRAMES_SYSTEM_PROMPT = `${SYSTEM_PROMPT}
+
+You are being given an ordered set of still frames sampled evenly across one video, not separate images. Read them as a single sequence: infer the subject, setting, style and how the scene develops from first frame to last.
+
+You cannot hear the video and you cannot see the motion between frames. Describe camera movement only where consecutive frames make it evident (a change in framing, angle, or distance). Never invent dialogue, music, or sound effects.`;
+
+/**
+ * Describe a video from frames sampled in the browser.
+ *
+ * Used when the source file is too large to upload (see lib/keyframes.ts). The
+ * frames are small enough to send inline, so this skips the Files API entirely
+ * — nothing is stored server-side and there is no upload to clean up.
+ */
+export async function analyzeFrames(
+  frames: { bytes: Buffer; mimeType: string }[]
+): Promise<string> {
+  const key = getApiKey();
+  const genAI = new GoogleGenerativeAI(key);
+
+  const systemInstruction: Content = {
+    role: "user",
+    parts: [{ text: FRAMES_SYSTEM_PROMPT }],
+  };
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
+
+  const parts: Part[] = frames.map((f) => ({
+    inlineData: { mimeType: f.mimeType, data: f.bytes.toString("base64") },
+  }));
+  parts.push({
+    text: `These ${frames.length} frames are in chronological order, sampled evenly across the video. Write one AI video-generation prompt that captures the whole clip.`,
+  });
+
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts }],
+  });
+
+  return result.response.text();
 }
 
 const STORYBOARD_SYSTEM_PROMPT = `You are a professional storyboard artist and film director. Given a story or script, break it into a clear sequence of storyboard scenes suitable for video/animation production.
@@ -269,34 +310,62 @@ function parseScenesText(text: string): RawScene[] {
       mood: fieldOf(block, "MOOD") || undefined,
     }))
     .filter((s) => s.description || s.heading)
-    .slice(0, 8);
+    .slice(0, MAX_SCENES);
+}
+
+/** Production context supplied by the project brief. All parts optional. */
+export interface SceneBrief {
+  audience?: string;
+  platform?: string;
+  durationSeconds?: number;
+  tone?: string;
+  cta?: string;
+}
+
+/**
+ * Render the brief as instruction lines. Only the fields the user actually
+ * filled in are mentioned — inventing "audience: general" would push the model
+ * toward bland, generic scenes, which is the problem the brief exists to solve.
+ */
+function briefLines(brief?: SceneBrief): string[] {
+  if (!brief) return [];
+  const lines: string[] = [];
+  if (brief.audience) lines.push(`Target audience: ${brief.audience}`);
+  if (brief.platform) lines.push(`Publishing platform: ${brief.platform}`);
+  if (brief.durationSeconds) {
+    lines.push(
+      `Total runtime: ${brief.durationSeconds} seconds — the scenes together must fit this, so keep each one short enough to be shot in a few seconds.`
+    );
+  }
+  if (brief.tone) lines.push(`Tone: ${brief.tone}`);
+  if (brief.cta) lines.push(`The final scene must land this call to action: ${brief.cta}`);
+  return lines.length > 0 ? ["", "Production brief:", ...lines] : [];
 }
 
 export async function generateScenes(
   idea: string,
-  count = 5
+  count = 5,
+  brief?: SceneBrief
 ): Promise<RawScene[]> {
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);
 
-  const target = Math.min(8, Math.max(3, count));
+  const target = clampSceneCount(count);
   const systemInstruction: Content = {
     role: "user",
     parts: [{ text: SCENES_SYSTEM_PROMPT }],
   };
   const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
 
+  const text = [
+    `Idea:\n${idea}`,
+    ...briefLines(brief),
+    "",
+    `Break this into about ${target} scenes using the [SCENE] block format.`,
+  ].join("\n");
+
   const result = await model.generateContent({
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `Idea:\n${idea}\n\nBreak this into about ${target} scenes using the [SCENE] block format.`,
-          },
-        ],
-      },
-    ],
+    contents: [{ role: "user", parts: [{ text }] }],
   });
 
   return parseScenesText(result.response.text());
@@ -394,7 +463,8 @@ function parseValidation(text: string): ValidationResult {
 
 export async function validatePrompt(
   prompt: string,
-  modelId?: string
+  modelId?: string,
+  locale: Locale = defaultLocale
 ): Promise<ValidationResult> {
   const key = getApiKey();
   const genAI = new GoogleGenerativeAI(key);
@@ -417,7 +487,9 @@ SCORE: <integer 0-100>
 [SUGGESTION] <one concrete, specific improvement>
 (between 2 and 5 [SUGGESTION] lines)
 
-Write in English. No commentary before or after.`;
+Keep the aspect names in English so the UI can match them, but write every note
+and suggestion in ${localeInstructionNames[locale]} — this feedback is read by
+the user, not fed to a video model. No commentary before or after.`;
 
   const systemInstruction: Content = {
     role: "user",

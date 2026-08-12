@@ -5,8 +5,11 @@ export type DetectedType = "video" | "image" | "text";
 
 export type ErrorCode =
   | "BAD_REQUEST"
+  | "INVALID_URL"
   | "FILE_TOO_LARGE"
   | "RATE_LIMIT_EXCEEDED"
+  | "UPSTREAM_BUSY"
+  | "SERVICE_ERROR"
   | "GEMINI_API_ERROR"
   | "INTERNAL_ERROR";
 

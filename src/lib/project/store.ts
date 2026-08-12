@@ -79,6 +79,48 @@ export function deleteProject(id: string): void {
   writeAll(readAll().filter((p) => p.id !== id));
 }
 
+/**
+ * Restore a project from an exported .json file.
+ *
+ * Projects live only in this browser's localStorage, so export/import is the
+ * only way to move work to another machine or recover it after a cache clear.
+ * A fresh id is always assigned: importing is "add a copy", never "silently
+ * overwrite the project you already had open".
+ *
+ * Returns the stored project, or null if the file isn't a project export.
+ */
+export function importProject(raw: string): Project | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== "object") return null;
+
+  const p = parsed as Partial<Project>;
+  // Scenes and bibles are the payload; a file with neither isn't a project.
+  if (!Array.isArray(p.scenes) && !Array.isArray(p.bibles)) return null;
+
+  const now = new Date().toISOString();
+  const project: Project = {
+    id: newId(),
+    title: typeof p.title === "string" && p.title.trim() ? p.title.trim() : "Imported project",
+    idea: typeof p.idea === "string" ? p.idea : "",
+    targetModel:
+      typeof p.targetModel === "string" && MODEL_REGISTRY.some((m) => m.id === p.targetModel)
+        ? p.targetModel
+        : MODEL_REGISTRY[0]?.id ?? "veo",
+    inputMode: p.inputMode === "image" ? "image" : "text",
+    bibles: Array.isArray(p.bibles) ? p.bibles : [],
+    scenes: Array.isArray(p.scenes) ? p.scenes : [],
+    createdAt: typeof p.createdAt === "string" ? p.createdAt : now,
+    updatedAt: now,
+  };
+  writeAll([project, ...readAll()]);
+  return project;
+}
+
 /** Fresh scene id (exported for the workspace UI). */
 export function newSceneId(): string {
   return newId();

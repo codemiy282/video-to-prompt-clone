@@ -10,6 +10,8 @@
 
 import { validatePrompt, GeminiConfigError } from "../generate-prompt/gemini";
 import { checkRateLimit } from "../generate-prompt/rate-limit";
+import { classifyUpstream } from "../generate-prompt/upstream";
+import { resolveLocale } from "@/i18n/config";
 import { MODEL_REGISTRY } from "@/lib/modelRegistry";
 
 export const runtime = "nodejs";
@@ -22,6 +24,7 @@ const MAX_PROMPT = 6000;
 interface Body {
   prompt?: string;
   model?: unknown;
+  lang?: unknown;
 }
 
 function clientIp(request: Request): string {
@@ -64,23 +67,36 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 
-  const modelId =
-    typeof body.model === "string" && VALID_IDS.has(body.model) ? body.model : undefined;
+  // An unrecognised id used to fall through to "no target model", so a typo
+  // silently produced a generic review while the caller believed they were
+  // validating against Veo. Say so instead.
+  if (body.model !== undefined && !(typeof body.model === "string" && VALID_IDS.has(body.model))) {
+    return json(
+      {
+        success: false,
+        error: "UNKNOWN_MODEL",
+        message: `Unknown model id. Valid ids: ${MODEL_REGISTRY.map((m) => m.id).join(", ")}.`,
+      },
+      400
+    );
+  }
+  const modelId = typeof body.model === "string" ? body.model : undefined;
 
   try {
-    const result = await validatePrompt(prompt, modelId);
+    const result = await validatePrompt(prompt, modelId, resolveLocale(body.lang));
     if (result.criteria.length === 0 && result.score === 0) {
       return json(
-        { success: false, error: "REVIEW_FAILED", message: "Could not analyze this prompt. Try again." },
+        { success: false, error: "SERVICE_ERROR", message: "Could not analyze this prompt." },
         502
       );
     }
     return json({ success: true, ...result }, 200);
   } catch (err) {
     if (err instanceof GeminiConfigError) {
-      return json({ success: false, error: "GEMINI_CONFIG", message: err.message }, 500);
+      console.error("[validate] configuration error:", err.message);
+      return json({ success: false, error: "SERVICE_ERROR", message: "The service is unavailable." }, 503);
     }
-    const message = err instanceof Error ? err.message : "Validation failed.";
-    return json({ success: false, error: "VALIDATE_FAILED", message }, 500);
+    const { code, status } = classifyUpstream(err, "validate");
+    return json({ success: false, error: code, message: "The service is busy. Please try again." }, status);
   }
 }

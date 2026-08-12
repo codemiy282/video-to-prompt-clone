@@ -69,17 +69,20 @@ function BriefField({
   placeholder,
   value,
   onChange,
+  readOnly = false,
 }: {
   label: string;
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
+  readOnly?: boolean;
 }) {
   return (
     <div>
       <label className="mb-1.5 block text-muted-foreground text-xs">{label}</label>
       <input
         value={value}
+        readOnly={readOnly}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={200}
@@ -677,24 +680,28 @@ function Workspace({
             label={t("project.briefAudience")}
             placeholder={t("project.briefAudiencePh")}
             value={project.brief?.audience ?? ""}
+            readOnly={readOnly}
             onChange={(v) => patchBrief({ audience: v })}
           />
           <BriefField
             label={t("project.briefPlatform")}
             placeholder={t("project.briefPlatformPh")}
             value={project.brief?.platform ?? ""}
+            readOnly={readOnly}
             onChange={(v) => patchBrief({ platform: v })}
           />
           <BriefField
             label={t("project.briefTone")}
             placeholder={t("project.briefTonePh")}
             value={project.brief?.tone ?? ""}
+            readOnly={readOnly}
             onChange={(v) => patchBrief({ tone: v })}
           />
           <BriefField
             label={t("project.briefCta")}
             placeholder={t("project.briefCtaPh")}
             value={project.brief?.cta ?? ""}
+            readOnly={readOnly}
             onChange={(v) => patchBrief({ cta: v })}
           />
           <div>
@@ -703,6 +710,7 @@ function Workspace({
             </label>
             <input
               type="number"
+              readOnly={readOnly}
               min={1}
               max={600}
               value={project.brief?.durationSeconds ?? ""}
@@ -735,6 +743,7 @@ function Workspace({
               return (
                 <button
                   key={m.id}
+                  disabled={readOnly}
                   onClick={() => patch({ targetModel: m.id })}
                   className={`inline-flex items-center gap-1.5 rounded-lg border px-3 h-9 text-sm font-medium transition-colors cursor-pointer ${
                     on
@@ -755,6 +764,7 @@ function Workspace({
             {(["text", "image"] as InputMode[]).map((mode) => (
               <button
                 key={mode}
+                disabled={readOnly}
                 onClick={() => patch({ inputMode: mode })}
                 className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3 h-9 text-sm font-medium transition-colors cursor-pointer ${
                   project.inputMode === mode
@@ -785,6 +795,7 @@ function Workspace({
                   {BIBLE_TYPES.map((tp) => (
                     <button
                       key={tp}
+                      disabled={readOnly}
                       onClick={() => patchBible(b.id, b.name, b.description, tp)}
                       className={`inline-flex items-center gap-1 rounded-lg border px-2 h-7 text-xs font-medium transition-colors cursor-pointer ${
                         b.type === tp
@@ -797,6 +808,7 @@ function Workspace({
                     </button>
                   ))}
                   <button
+                    disabled={readOnly}
                     onClick={() => removeBible(b.id)}
                     aria-label={t("project.bible.remove")}
                     className="ml-auto inline-flex items-center rounded-lg border border-border p-1.5 text-muted-foreground hover:text-red-500 hover:border-red-500/40 transition-colors cursor-pointer"
@@ -806,12 +818,14 @@ function Workspace({
                 </div>
                 <input
                   value={b.name}
+                  readOnly={readOnly}
                   onChange={(e) => patchBible(b.id, e.target.value, b.description, b.type)}
                   placeholder={t("project.bible.namePlaceholder")}
                   className="mb-1.5 w-full bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50"
                 />
                 <textarea
                   value={b.description}
+                  readOnly={readOnly}
                   onChange={(e) => patchBible(b.id, b.name, e.target.value, b.type)}
                   placeholder={t("project.bible.descPlaceholder")}
                   className="h-16 w-full resize-none rounded-lg border border-border bg-transparent p-2.5 text-sm text-foreground outline-none focus:border-primary"
@@ -825,6 +839,7 @@ function Workspace({
           {BIBLE_TYPES.map((tp) => (
             <button
               key={tp}
+              disabled={readOnly}
               onClick={() => addBible(tp)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 h-9 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
             >

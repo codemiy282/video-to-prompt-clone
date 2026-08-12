@@ -1,5 +1,6 @@
 const vi = {
   nav: {
+    guide: "Hướng dẫn",
     generators: "Trình tạo Prompt",
     sub: {
       kling: "Trình tạo Kling AI",
@@ -21,6 +22,7 @@ const vi = {
     select: "Chọn ngôn ngữ",
   },
   footer: {
+    guide: "Hướng dẫn sử dụng",
     desc: "Mở khóa toàn bộ tiềm năng của video với AI tiên tiến, biến chúng thành các prompt chi tiết một cách dễ dàng.",
     about: "Giới thiệu",
     tools: "Công cụ",
@@ -241,6 +243,123 @@ const vi = {
     placeholder: "Mô tả câu chuyện hoặc kịch bản của bạn tại đây...",
     generate: "Tạo Bảng phân cảnh",
     result: "Bảng phân cảnh",
+  },
+  guide: {
+    title: "Hướng dẫn sử dụng",
+    subtitle:
+      "Cách lấy được một prompt dùng được từ site này, các thuật ngữ quay phim nghĩa là gì, và đọc điểm của trang Kiểm tra Prompt ra sao.",
+    contents: "Nội dung trang",
+    start: {
+      title: "Năm phút đầu tiên",
+      intro:
+        "Đường ngắn nhất từ một ý tưởng tới bộ prompt dán thẳng vào model video. Trừ bước đầu, các bước sau đều không bắt buộc.",
+      s1Title: "Tạo một project",
+      s1Body:
+        "Mở Dự án rồi tạo mới. Một project giữ ý tưởng, thông tin sản xuất, nhân vật và bối cảnh lặp lại, cùng toàn bộ phân cảnh — để bạn không phải gõ lại bối cảnh mỗi lần.",
+      s2Title: "Viết ý tưởng, rồi điền thông tin sản xuất",
+      s2Body:
+        "Ý tưởng chỉ cần một hai câu. Phần thông tin sản xuất — đối tượng xem, nền tảng, thời lượng, tông, CTA — mới là thứ khiến kết quả thôi chung chung. Chỉ ô nào bạn điền mới được gửi đi.",
+      s3Title: "Chia thành phân cảnh",
+      s3Body:
+        "Thời lượng bạn nhập sẽ gợi ý số phân cảnh, khoảng một cảnh cho mỗi bốn giây. Sau đó sửa thoải mái: đổi thứ tự, tách một cảnh đang ôm hai ý, nhân đôi một cú máy gần giống.",
+      s4Title: "Lập Bible cho những gì lặp lại",
+      s4Body:
+        "Một nhân vật xuất hiện ở bốn cảnh thì phải trông giống nhau ở cả bốn. Mô tả họ một lần trong Bible, mô tả đó sẽ được chèn vào mọi phân cảnh có dùng.",
+      s5Title: "Tạo prompt và xuất ra",
+      s5Body:
+        "Tạo từng cảnh hoặc tạo hàng loạt. Cảnh nào ưng thì khoá lại, lần chạy hàng loạt sau sẽ bỏ qua. Xuất Markdown, JSON, CSV, in ra PDF, hoặc chép link chia sẻ chỉ xem.",
+      note:
+        "Phân tích video tham chiếu cũng được. Tệp tới {limit} sẽ tải lên nguyên vẹn, nhờ đó model đọc được cả chuyển động và âm thanh. Tệp lớn hơn ở lại máy bạn — trình duyệt lấy khung hình và chỉ gửi những khung đó.",
+    },
+    models: {
+      title: "Viết cho từng model",
+      intro:
+        "Bốn trình tạo khác nhau ở những điểm ảnh hưởng tới cách bạn viết. Phần này sinh ra từ chính bảng năng lực mà app đang dùng, nên không thể lệch với thực tế của công cụ.",
+      hasAudio: "Có âm thanh gốc",
+      noAudio: "Không có âm thanh gốc",
+      docs: "Tài liệu chính thức",
+      checked: "Đối chiếu ngày {date}",
+      disclaimer:
+        "Model video AI thay đổi rất nhanh. Hãy coi thời lượng và độ phân giải là con số tham khảo, và đối chiếu tài liệu chính thức trước khi chốt sản xuất.",
+    },
+    glossary: {
+      title: "Thuật ngữ quay phim",
+      intro:
+        "Model video phản hồi tốt với đúng thứ ngôn ngữ mà một ê-kíp dùng. Đây là những thuật ngữ đáng biết; mỗi cụm đều có thể thả thẳng vào prompt.",
+      shotTitle: "Cỡ cảnh — lấy bao nhiêu phần chủ thể vào khung",
+      cameraTitle: "Chuyển động máy — máy quay làm gì trong cú đó",
+      lightTitle: "Ánh sáng — đòn bẩy mạnh nhất lên cảm xúc",
+      shot: {
+        wideTerm: "wide shot",
+        wideDesc: "Chủ thể cùng khung cảnh xung quanh. Dùng để giới thiệu bối cảnh.",
+        mediumTerm: "medium shot",
+        mediumDesc: "Khoảng từ thắt lưng lên. Cỡ cảnh mặc định cho thoại và hành động.",
+        closeupTerm: "close-up",
+        closeupDesc: "Khuôn mặt hoặc vật thể chiếm trọn khung. Dùng cho phản ứng và chi tiết.",
+        extremeTerm: "extreme close-up",
+        extremeDesc: "Đôi mắt, bàn tay, chất liệu sản phẩm. Rất mạnh, nên dùng tiết chế.",
+        overTerm: "over-the-shoulder",
+        overDesc: "Nhìn qua vai người này sang người kia. Chuẩn mực cho hội thoại.",
+      },
+      camera: {
+        staticTerm: "static / locked off",
+        staticDesc: "Máy đứng yên. Điềm tĩnh, và là lựa chọn an toàn nhất cho clip ngắn.",
+        panTerm: "pan left / pan right",
+        panDesc: "Máy xoay ngang tại chỗ.",
+        tiltTerm: "tilt up / tilt down",
+        tiltDesc: "Máy ngẩng lên hoặc chúi xuống tại chỗ.",
+        dollyTerm: "dolly in / dolly out",
+        dollyDesc: "Cả máy tiến lại gần hoặc lùi ra xa. Dồn nén hoặc giải toả căng thẳng.",
+        trackingTerm: "tracking shot",
+        trackingDesc: "Máy di chuyển song song với chủ thể đang di chuyển.",
+        craneTerm: "crane / boom",
+        craneDesc: "Máy nâng lên hoặc hạ xuống. Tạo cảm giác hoành tráng, trông tốn kém.",
+      },
+      light: {
+        goldenTerm: "golden hour",
+        goldenDesc: "Nắng thấp và ấm ngay sau bình minh hoặc trước hoàng hôn. Tôn dáng, hoài niệm.",
+        softTerm: "soft light",
+        softDesc: "Ánh sáng tán, mép bóng mềm. Đẹp cho khuôn mặt, cho cảm giác cao cấp.",
+        hardTerm: "hard light",
+        hardDesc: "Bóng đổ sắc nét từ nguồn nhỏ. Kịch tính, tương phản cao.",
+        backTerm: "backlight / rim light",
+        backDesc: "Nguồn sáng phía sau, viền lấy đường nét chủ thể. Tách họ khỏi hậu cảnh.",
+        practicalTerm: "practical light",
+        practicalDesc: "Đèn bàn, biển neon, màn hình hiện ngay trong khung. Làm cảnh trông có thật.",
+      },
+    },
+    recipes: {
+      title: "Prompt chạy được, và vì sao",
+      intro:
+        "Ba lỗi chiếm phần lớn các lần tạo video thất vọng, kèm cách sửa.",
+      r1Title: "Gọi tên chủ thể",
+      r1Bad: "Cô ấy đi trong thành phố với vẻ buồn bã.",
+      r1Good:
+        "Người phụ nữ ngoài hai mươi, tóc ngắn màu sẫm, áo mưa be, bước chậm trên con phố Hà Nội ướt mưa lúc chạng vạng, vai chùng xuống.",
+      r1Why:
+        "\"Cô ấy\" không cho model thứ gì để vẽ. Tuổi, trang phục và dáng đứng mới là thứ khiến một người xuất hiện nhất quán — và là thứ giúp bạn lặp lại họ ở cảnh sau.",
+      r2Title: "Mỗi cú máy chỉ một lệnh camera",
+      r2Bad: "Máy cố định, xoay nhanh quanh chủ thể, rồi zoom vào.",
+      r2Good: "Dolly-in chậm về phía chủ thể, ngoài ra máy giữ vững.",
+      r2Why:
+        "Máy cố định thì không thể xoay quanh. Lệnh mâu thuẫn khiến model chọn đại một cái. Cần hai chuyển động thì đó là hai cú máy.",
+      r3Title: "Cân hành động với thời lượng",
+      r3Bad: "Cô bước vào, pha cà phê, đọc thư, khóc, rồi rời đi. 5 giây.",
+      r3Good: "Cô hạ lá thư xuống và nhắm mắt lại. 5 giây.",
+      r3Why:
+        "Phần lớn model chỉ cho ra vài giây. Năm hành động trong năm giây sẽ thành một mớ nhoè. Mỗi cú máy một nhịp — đây là quy tắc sửa được nhiều kết quả nhất.",
+    },
+    score: {
+      title: "Đọc điểm của Kiểm tra Prompt",
+      intro:
+        "Trang Kiểm tra chấm điểm prompt trước khi bạn tiêu credit render. Con số không quan trọng bằng phần nhận xét từng tiêu chí bên dưới — đó mới là chỗ chỉ ra cần sửa gì.",
+      high: "Sẵn sàng tạo video. Lướt qua phần gợi ý, nhưng prompt này đã đủ cụ thể để model có đích rõ ràng.",
+      mid: "Dùng được nhưng còn hở. Thường là thiếu phong cách, chưa nói rõ camera, hoặc chủ thể mô tả quá lỏng. Sửa các tiêu chí bị đánh yếu rồi chấm lại.",
+      low: "Chưa nên tiêu credit. Thường là chủ thể chưa được xác định, các lệnh mâu thuẫn nhau, hoặc nhồi quá nhiều thứ vào thời lượng.",
+      outro:
+        "Chọn model đích trước khi chấm. Bộ chấm điểm có biết năng lực từng model: nó sẽ không trừ điểm vì thiếu nhạc trên một model vốn không tạo được âm thanh.",
+      cta: "Mở trang Kiểm tra Prompt",
+    },
   },
   project: {
     share: "Link chia sẻ",

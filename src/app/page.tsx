@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "@/i18n/LanguageContext";
 import ErrorNotice from "@/components/ErrorNotice";
 import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
-import { isWithinUploadLimit } from "@/lib/uploadLimits";
+import { isWithinUploadLimit, UPLOAD_MAX_LABEL } from "@/lib/uploadLimits";
 import { extractKeyframes, KeyframeError, FRAME_COUNT } from "@/lib/keyframes";
 import {
   IconVideo,
@@ -42,6 +42,9 @@ export default function Home() {
   const [failure, setFailure] = useState<ApiFailure | null>(null);
   // Non-null while frames are being sampled locally, before any request goes out.
   const [frameProgress, setFrameProgress] = useState<{ done: number; total: number } | null>(null);
+  // True once a result came from sampled frames, so the caveat stays visible
+  // next to that result rather than vanishing with the progress line.
+  const [usedFrames, setUsedFrames] = useState(false);
   const lastRequest = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t, locale } = useLanguage();
@@ -85,6 +88,7 @@ export default function Home() {
 
   function handleUrlSubmit() {
     const run = () => {
+      setUsedFrames(false);
       const fd = new FormData();
       fd.append("type", "video");
       fd.append("url", videoUrl);
@@ -100,6 +104,7 @@ export default function Home() {
    */
   async function postFrames(f: File) {
     setFrameProgress({ done: 0, total: FRAME_COUNT });
+    setUsedFrames(true);
     try {
       const frames = await extractKeyframes(f, {
         onProgress: (done, total) => setFrameProgress({ done, total }),
@@ -138,6 +143,7 @@ export default function Home() {
     const run = useFrames
       ? () => void postFrames(f)
       : () => {
+          setUsedFrames(false);
           const fd = new FormData();
           fd.append("file", f);
           fd.append("type", activeTab);
@@ -305,6 +311,18 @@ export default function Home() {
                 >
                   {t("home.upload.framesProgress", frameProgress)}
                 </div>
+              )}
+
+              {/* Shown alongside the result, not only during extraction: the
+                  reader needs to know the prompt came from stills — no audio,
+                  no motion — while they are looking at it. */}
+              {usedFrames && (
+                <p className="mx-auto mb-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-muted-foreground text-xs leading-relaxed">
+                  {t("home.upload.framesNotice", {
+                    limit: UPLOAD_MAX_LABEL,
+                    count: FRAME_COUNT,
+                  })}
+                </p>
               )}
 
               {loading && (

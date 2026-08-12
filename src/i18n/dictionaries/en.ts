@@ -1,5 +1,6 @@
 const en = {
   nav: {
+    guide: "Guide",
     generators: "Prompt Generators",
     sub: {
       kling: "Kling AI Generator",
@@ -21,6 +22,7 @@ const en = {
     select: "Select language",
   },
   footer: {
+    guide: "User Guide",
     desc: "Unlock the full potential of your videos with our cutting-edge AI, transforming them into detailed prompts effortlessly.",
     about: "About",
     tools: "Tools",
@@ -241,6 +243,123 @@ const en = {
     placeholder: "Describe your story or script here...",
     generate: "Generate Storyboard",
     result: "Storyboard",
+  },
+  guide: {
+    title: "User guide",
+    subtitle:
+      "How to get a usable prompt out of this site, what the cinematography terms mean, and how to read the score the Validator gives you.",
+    contents: "On this page",
+    start: {
+      title: "Your first five minutes",
+      intro:
+        "The shortest path from an idea to prompts you can paste into a video model. Every step is optional except the first.",
+      s1Title: "Start a project",
+      s1Body:
+        "Open Projects and create one. A project holds your idea, the production brief, recurring characters and locations, and every scene — so you are not rebuilding context each time.",
+      s2Title: "Write the idea, then fill the brief",
+      s2Body:
+        "One or two sentences is enough for the idea. The brief — audience, platform, runtime, tone, call to action — is what stops the output being generic. Only the fields you fill in are sent.",
+      s3Title: "Break it into scenes",
+      s3Body:
+        "The runtime you entered suggests how many scenes to generate, at roughly one per four seconds. Edit any scene afterwards: reorder it, split one that covers two beats, duplicate a near-identical shot.",
+      s4Title: "Add a Bible for anything recurring",
+      s4Body:
+        "A character who appears in four shots needs to look the same in all four. Describe them once as a Bible entry and their description is injected into every scene that uses them.",
+      s5Title: "Generate prompts and export",
+      s5Body:
+        "Generate per scene or all at once. Lock a scene you are happy with and batch runs will skip it. Export Markdown, JSON, CSV, print to PDF, or copy a read-only share link.",
+      note:
+        "Analysing a reference video works too. Files up to {limit} are uploaded whole, which lets the model read motion and audio. Larger files stay on your device — your browser samples still frames and sends only those.",
+    },
+    models: {
+      title: "Writing for each model",
+      intro:
+        "The four generators differ in ways that change how you write. This section is generated from the capability registry the app itself uses, so it cannot drift from what the tools do.",
+      hasAudio: "Native audio",
+      noAudio: "No native audio",
+      docs: "Official docs",
+      checked: "Checked {date}",
+      disclaimer:
+        "AI video models change quickly. Treat durations and resolutions as approximate and confirm against the official documentation before committing to a shoot.",
+    },
+    glossary: {
+      title: "Cinematography terms",
+      intro:
+        "Video models respond to the vocabulary a crew would use. These are the terms worth knowing; each one is a phrase you can drop straight into a prompt.",
+      shotTitle: "Shot size — how much of the subject is in frame",
+      cameraTitle: "Camera movement — what the camera does during the shot",
+      lightTitle: "Lighting — the single biggest lever on mood",
+      shot: {
+        wideTerm: "wide shot",
+        wideDesc: "The subject with their surroundings. Establishes where you are.",
+        mediumTerm: "medium shot",
+        mediumDesc: "Roughly waist up. The default for dialogue and action.",
+        closeupTerm: "close-up",
+        closeupDesc: "Face or object filling the frame. Use it for reaction and detail.",
+        extremeTerm: "extreme close-up",
+        extremeDesc: "Eyes, hands, a product texture. High impact, use sparingly.",
+        overTerm: "over-the-shoulder",
+        overDesc: "Framed past one person onto another. Standard for conversation.",
+      },
+      camera: {
+        staticTerm: "static / locked off",
+        staticDesc: "No movement. Calm, and the safest choice for a short clip.",
+        panTerm: "pan left / pan right",
+        panDesc: "The camera pivots horizontally from a fixed position.",
+        tiltTerm: "tilt up / tilt down",
+        tiltDesc: "The camera pivots vertically from a fixed position.",
+        dollyTerm: "dolly in / dolly out",
+        dollyDesc: "The whole camera moves toward or away. Builds or releases tension.",
+        trackingTerm: "tracking shot",
+        trackingDesc: "The camera travels alongside a moving subject.",
+        craneTerm: "crane / boom",
+        craneDesc: "The camera rises or falls. Reads as grand; expensive-looking.",
+      },
+      light: {
+        goldenTerm: "golden hour",
+        goldenDesc: "Low warm sun just after sunrise or before sunset. Flattering, nostalgic.",
+        softTerm: "soft light",
+        softDesc: "Diffused, gentle shadow edges. Kind to faces, feels premium.",
+        hardTerm: "hard light",
+        hardDesc: "Sharp shadows from a small source. Dramatic, high contrast.",
+        backTerm: "backlight / rim light",
+        backDesc: "Light behind the subject, tracing their outline. Separates them from the background.",
+        practicalTerm: "practical light",
+        practicalDesc: "Lamps, neon, screens visible in shot. Grounds a scene as real.",
+      },
+    },
+    recipes: {
+      title: "Prompts that work, and why",
+      intro:
+        "Three failures that account for most disappointing generations, each with the fix.",
+      r1Title: "Name the subject",
+      r1Bad: "She walks through the city looking sad.",
+      r1Good:
+        "A woman in her late twenties, short dark hair, beige raincoat, walks slowly through a rain-slicked Hanoi street at dusk, shoulders lowered.",
+      r1Why:
+        "\"She\" gives the model nothing to draw. Age, clothing and posture are what make a person appear consistently — and what let you repeat them in the next shot.",
+      r2Title: "One camera instruction per shot",
+      r2Bad: "Locked-off camera, fast orbit around the subject, then zoom in.",
+      r2Good: "Slow dolly-in on the subject, camera otherwise steady.",
+      r2Why:
+        "A locked camera cannot orbit. Contradictory instructions make the model pick one at random. If you need two moves, that is two shots.",
+      r3Title: "Match the action to the runtime",
+      r3Bad: "She enters, makes coffee, reads a letter, cries, and leaves. 5 seconds.",
+      r3Good: "She lowers a letter and closes her eyes. 5 seconds.",
+      r3Why:
+        "Most models produce a handful of seconds. Five actions in five seconds becomes a blur. One beat per shot is the rule that fixes the most output.",
+    },
+    score: {
+      title: "Reading the Validator score",
+      intro:
+        "The Validator scores a prompt before you spend render credits on it. The number matters less than the per-criterion notes underneath it — those tell you what to change.",
+      high: "Ready to generate. Skim the suggestions, but this prompt is specific enough to give the model a clear target.",
+      mid: "Workable, with gaps. Usually a missing style, an unstated camera, or a subject described too loosely. Fix the criteria marked weak and re-score.",
+      low: "Do not spend credits yet. Typically the subject is undefined, the instructions contradict each other, or too much is packed into the runtime.",
+      outro:
+        "Pick your target model before scoring. The review is capability-aware: it will not penalise a missing soundtrack on a model that cannot produce one.",
+      cta: "Open the Validator",
+    },
   },
   project: {
     share: "Share link",

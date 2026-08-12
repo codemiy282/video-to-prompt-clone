@@ -88,8 +88,14 @@ async function resolveDuration(video: HTMLVideoElement): Promise<number> {
     video.currentTime = 1e101;
   });
 
-  // Leave the playhead somewhere valid before the caller starts seeking.
+  // Park the playhead somewhere valid, and wait for that seek to land. Leaving
+  // it in flight would let its `seeked` event satisfy the first frame's wait in
+  // the extraction loop, capturing t=0 instead of the requested timestamp.
   video.currentTime = 0;
+  await onceEvent(video, "seeked", SEEK_TIMEOUT_MS).catch(() => {
+    // A browser that never confirms this seek still seeks correctly for the
+    // real samples below; don't fail the whole extraction over the parking.
+  });
   return video.duration;
 }
 

@@ -361,6 +361,7 @@ const zh = {
     },
   },
   project: {
+    promptStale: "此提示词生成后，场景或设定集已发生改动。使用前请重新生成。",
     share: "分享链接",
     shareCopied: "链接已复制",
     shareTooLarge: "该项目太大，无法放进分享链接。请导出 .json 并发送该文件。",

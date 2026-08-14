@@ -362,6 +362,7 @@ const vi = {
     },
   },
   project: {
+    promptStale: "Phân cảnh hoặc Bible đã đổi sau khi prompt này được tạo. Hãy tạo lại trước khi dùng.",
     share: "Link chia sẻ",
     shareCopied: "Đã chép link",
     shareTooLarge: "Project này quá lớn để nhét vào link. Hãy xuất .json rồi gửi tệp đó.",

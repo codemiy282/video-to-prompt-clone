@@ -362,6 +362,7 @@ const en = {
     },
   },
   project: {
+    promptStale: "The scene or its Bible changed after this prompt was generated. Regenerate it before using it.",
     share: "Share link",
     shareCopied: "Link copied",
     shareTooLarge: "This project is too big for a share link. Export .json and send that file instead.",

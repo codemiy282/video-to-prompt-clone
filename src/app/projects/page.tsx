@@ -53,11 +53,15 @@ import {
   importProject,
 } from "@/lib/project/store";
 import {
+  buildScenePromptInput,
+  promptFingerprint,
+  isPromptStale,
+} from "@/lib/project/promptSource";
+import {
   exportMarkdown,
   exportJSON,
   exportCSV,
   exportPDF,
-  buildBibleContext,
 } from "@/lib/project/export";
 import { buildShareLink, readShareLink, shareSupported, ShareTooLargeError } from "@/lib/project/share";
 
@@ -513,24 +517,11 @@ function Workspace({
   }
 
   async function generatePrompt(scene: Scene): Promise<boolean> {
-    const sceneText = [
-      scene.heading,
-      scene.description,
-      scene.shotType ? `Shot: ${scene.shotType}` : "",
-      scene.cameraMove ? `Camera: ${scene.cameraMove}` : "",
-      scene.mood ? `Mood: ${scene.mood}` : "",
-    ]
-      .filter(Boolean)
-      .join(". ");
-    if (!sceneText.trim()) return false;
-
-    // Prepend only the bible entries selected for this scene (undefined = all,
-    // for backward compatibility with scenes saved before this existed).
-    const relevantBibles = scene.bibleIds
-      ? bibles.filter((b) => scene.bibleIds!.includes(b.id))
-      : bibles;
-    const bibleCtx = buildBibleContext(relevantBibles);
-    const base = bibleCtx ? `${bibleCtx}\n\nScene: ${sceneText}` : sceneText;
+    // Built by the same helper the fingerprint uses, so "what the prompt was
+    // generated from" is defined in exactly one place.
+    const base = buildScenePromptInput(scene, bibles);
+    if (!base.trim()) return false;
+    const source = promptFingerprint(scene, bibles, project.targetModel, project.inputMode);
 
     setPromptLoadingId(scene.id);
     setError(null);
@@ -549,6 +540,7 @@ function Workspace({
         patchScene(scene.id, {
           prompt: data.results[0].prompt,
           promptModel: project.targetModel,
+          promptSource: source,
           warnings: data.results[0].warnings ?? [],
         });
         return true;
@@ -568,8 +560,15 @@ function Workspace({
   // on the first failure (e.g. rate limit) rather than firing more requests.
   async function generateAllPrompts() {
     // Locked scenes are approved work — a batch run must not spend a call
-    // overwriting them.
-    const targets = scenes.filter((s) => s.description.trim() && !s.locked);
+    // overwriting them. Scenes whose prompt is still current are skipped too:
+    // regenerating them would cost a Gemini call to reproduce what is already
+    // there, and quota is the scarcest thing this project has.
+    const targets = scenes.filter(
+      (s) =>
+        s.description.trim() &&
+        !s.locked &&
+        (!s.prompt || isPromptStale(s, bibles, project.targetModel, project.inputMode))
+    );
     if (targets.length === 0) return;
     setBatchLoading(true);
     setError(null);
@@ -1072,7 +1071,22 @@ function Workspace({
             )}
 
             {scene.prompt && (
-              <div className="mt-3 rounded-lg border border-border bg-background p-3">
+              <div
+                className={`mt-3 rounded-lg border bg-background p-3 ${
+                  isPromptStale(scene, bibles, project.targetModel, project.inputMode)
+                    ? "border-amber-500/50"
+                    : "border-border"
+                }`}
+              >
+                {/* A prompt is a snapshot. Once the scene, its Bible entries or
+                    the target model move on, saying nothing would let someone
+                    copy wording that no longer matches the project. */}
+                {isPromptStale(scene, bibles, project.targetModel, project.inputMode) && (
+                  <p className="mb-2 flex items-start gap-1.5 text-amber-600 text-xs dark:text-amber-400">
+                    <IconAlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                    <span>{t("project.promptStale")}</span>
+                  </p>
+                )}
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <span className="text-xs font-medium text-muted-foreground">
                     {t("project.promptFor", {

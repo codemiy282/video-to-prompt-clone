@@ -12,7 +12,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import ErrorNotice from "@/components/ErrorNotice";
 import { toApiFailure, NETWORK_FAILURE, type ApiFailure } from "@/lib/apiError";
-import { MODEL_REGISTRY } from "@/lib/modelRegistry";
+import { MODEL_REGISTRY, capabilityWarnings, getModel } from "@/lib/modelRegistry";
 
 interface Criterion {
   name: string;
@@ -46,6 +46,12 @@ export default function ValidatorPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [failure, setFailure] = useState<ApiFailure | null>(null);
+
+  // Registry-driven, so it updates as the user types or switches model. Only
+  // meaningful once a target is chosen — "general" has no capabilities to
+  // contradict.
+  const target = model ? getModel(model) : undefined;
+  const capabilityIssues = target ? capabilityWarnings(target, prompt, "text") : [];
 
   async function handleAnalyze() {
     if (!prompt.trim()) return;
@@ -128,6 +134,23 @@ export default function ValidatorPage() {
                 ))}
               </div>
             </div>
+
+            {/* Capability mismatches are decided by the registry, not by the
+                model — so they can be shown while typing, for free, instead of
+                costing a Gemini call to be told the target has no audio. */}
+            {capabilityIssues.length > 0 && (
+              <div className="space-y-1.5">
+                {capabilityIssues.map((w) => (
+                  <div
+                    key={w}
+                    className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-muted-foreground text-xs"
+                  >
+                    <IconAlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                    <span>{t(`convert.warn.${w}`)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <ErrorNotice
               failure={failure}

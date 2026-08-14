@@ -70,10 +70,11 @@ Markdown và JSON đã có trong `src/lib/project/export.ts`.
 - [ ] Prompt tái tạo theo từng model
 
 ### Nâng cấp chấm điểm & nhất quán
-Bible đã có đủ 3 loại, còn thiếu phần kiểm tra.
-- [ ] Kiểm tra thời lượng có khả thi không
-- [ ] Đối chiếu model có hỗ trợ không
-- [ ] Cảnh báo khi scene làm sai thuộc tính đã khoá
+Bible đã có đủ 3 loại.
+- [x] Đối chiếu model có hỗ trợ không — hiện ngay khi gõ, không tốn lượt gọi AI
+- [x] Cảnh báo khi prompt đã cũ so với scene/Bible đã đổi
+- [x] Batch bỏ qua scene có prompt còn đúng, đỡ đốt quota
+- [ ] Kiểm tra thời lượng có khả thi không (cần AI)
 - [ ] Thêm bộ nhận diện thương hiệu (logo, màu, font)
 
 ---

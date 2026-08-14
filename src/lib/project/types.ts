@@ -17,6 +17,13 @@ export interface Scene {
   prompt?: string;
   /** Which registry model id the prompt targets. */
   promptModel?: string;
+  /**
+   * Fingerprint of the text `prompt` was generated from (see promptSource.ts).
+   * When the scene, its Bible entries, or the target model change, this stops
+   * matching and the UI can flag the prompt as out of date. Absent on scenes
+   * saved before fingerprints existed.
+   */
+  promptSource?: string;
   /** Capability warning codes returned alongside the prompt. */
   warnings?: string[];
   /**

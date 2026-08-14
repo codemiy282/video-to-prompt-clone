@@ -82,19 +82,28 @@ Bible đã có đủ 3 loại.
 # Cột 3 — Blog & SEO
 
 ### Dựng blog WordPress
-Hiện `/blog`, `/guide` đều 404.
+`/guide` đã có. `/blog` vẫn 404 — phần này cần hosting của bạn.
 - [ ] Chọn hosting WordPress
 - [ ] Đặt ở `tênmiền.com/blog` (đừng dùng subdomain — SEO không chảy sang app)
 - [ ] Cài plugin SEO
-- [ ] Sitemap + Google Search Console
+- [x] Sitemap + robots.txt (đã có ở app, xem thẻ dưới)
+- [ ] Khai báo Google Search Console (cần tài khoản của bạn)
 - [ ] Link qua lại với app
 
 ### Viết hướng dẫn trong app
-- [ ] Tạo trang `/guide`
-- [ ] Bài "5 phút đầu tiên"
-- [ ] Hướng dẫn riêng Veo / Kling / Runway / Seedance
-- [ ] Từ điển thuật ngữ quay phim
-- [ ] Dịch 3 ngôn ngữ
+- [x] Tạo trang `/guide`, có link ở header và footer
+- [x] Bài "5 phút đầu tiên" — 5 bước từ ý tưởng tới prompt xuất ra
+- [x] Hướng dẫn riêng Veo / Kling / Runway / Seedance — sinh từ registry nên không lệch được
+- [x] Từ điển thuật ngữ quay phim — 16 mục: cỡ cảnh, chuyển động máy, ánh sáng
+- [x] 3 ví dụ prompt tệ/tốt kèm lý do
+- [x] Cách đọc điểm Validator
+- [x] Dịch 3 ngôn ngữ
+
+### Sitemap & robots.txt
+- [x] `sitemap.xml` 15 URL, `robots.txt` trỏ đúng
+- [x] `metadataBase` + canonical riêng cho từng trang
+- [x] URL gom về `lib/siteUrl.ts` — đổi domain chỉ cần một biến môi trường
+- [x] Không đưa `/image-to-video` vào sitemap (trang trả video giả)
 
 ### n8n viết bài SEO
 - [ ] Dựng n8n

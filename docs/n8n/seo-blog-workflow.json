@@ -1,0 +1,768 @@
+{
+  "name": "SEO Blog - Viet bai va dang WordPress",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "n000",
+      "name": "⏰ Lich chay",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.BLOG_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "topics",
+          "mode": "name"
+        }
+      },
+      "id": "n001",
+      "name": "CFG: Doc bang chu de",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ ($json.status || '').toLowerCase().trim() }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n002",
+      "name": "CFG: Loc chu de cho viet",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Kiểm tra một dòng chủ đề có đủ dữ liệu để viết bài không ===\n// Thiếu trường nào thì đánh dấu lỗi thay vì để AI đoán bừa.\nconst out = [];\n\nfor (const item of $input.all()) {\n  const d = item.json;\n  const missing = [];\n\n  if (!d.topic_id) missing.push('topic_id');\n  if (!d.keyword) missing.push('keyword');\n  if (!d.title_hint) missing.push('title_hint');\n\n  out.push({\n    json: {\n      ...d,\n      _valid: missing.length === 0,\n      _error_message: missing.length ? `Thieu truong: ${missing.join(', ')}` : '',\n    },\n  });\n}\n\nreturn out;"
+      },
+      "id": "n003",
+      "name": "CFG: Kiem tra chu de",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json._valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n004",
+      "name": "IF: Chu de hop le?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.item.json;\nreturn [{ json: {\n  log_id: `ERR-CFG-${Date.now()}`,\n  topic_id: d.topic_id || 'UNKNOWN',\n  error_type: 'config',\n  error_message: d._error_message || 'Dong chu de khong hop le',\n  timestamp: new Date().toISOString(),\n} }];"
+      },
+      "id": "n005",
+      "name": "ERR: Dinh dang loi cau hinh",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.BLOG_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "errors",
+          "mode": "name"
+        },
+        "operation": "append",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "log_id": "={{ $json.log_id }}",
+            "topic_id": "={{ $json.topic_id }}",
+            "error_type": "={{ $json.error_type }}",
+            "error_message": "={{ $json.error_message }}",
+            "timestamp": "={{ $json.timestamp }}"
+          }
+        }
+      },
+      "id": "n006",
+      "name": "ERR: Ghi log loi",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1200,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "n007",
+      "name": "DATA: Chia tung chu de",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.BLOG_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "posts",
+          "mode": "name"
+        }
+      },
+      "id": "n008",
+      "name": "LOG: Doc bai da viet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Bỏ chủ đề đã viết, và chặn khi đã đủ số bài trong ngày ===\n//\n// Hai việc gộp một chỗ vì cùng đọc một nguồn: bảng bài đã đăng.\n//   - Chống trùng: cùng topic_id đã có bài thì bỏ qua.\n//   - Hạn mức ngày: đếm bài tạo hôm nay, chạm trần thì dừng.\n//\n// Trần lấy từ biến môi trường để đổi nhịp đăng mà không phải sửa workflow.\nconst topic = $('DATA: Chia tung chu de').first().json;\nconst posts = $('LOG: Doc bai da viet').all();\n\nconst dailyCap = parseInt($env.BLOG_POSTS_PER_DAY || '2', 10);\nconst today = new Date().toISOString().split('T')[0];\n\nconst writtenTopics = new Set();\nlet createdToday = 0;\n\nfor (const p of posts) {\n  const row = p.json;\n  if (row.topic_id) writtenTopics.add(String(row.topic_id));\n  if ((row.created_at || '').startsWith(today)) createdToday++;\n}\n\nlet shouldWrite = true;\nlet skipReason = '';\n\nif (writtenTopics.has(String(topic.topic_id))) {\n  shouldWrite = false;\n  skipReason = 'da_co_bai';\n} else if (createdToday >= dailyCap) {\n  shouldWrite = false;\n  skipReason = 'het_han_muc_ngay';\n}\n\nreturn [{ json: {\n  ...topic,\n  _should_write: shouldWrite,\n  _skip_reason: skipReason,\n  _created_today: createdToday,\n  _daily_cap: dailyCap,\n} }];"
+      },
+      "id": "n009",
+      "name": "DATA: Chong trung va han muc",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json._should_write }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n010",
+      "name": "IF: Co nen viet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-goog-api-key",
+              "value": "={{ $env.GEMINI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  system_instruction: { parts: [{ text: `Ban la nguoi viet noi dung SEO cho mot cong cu AI lam video.\n\nViet bai chuan SEO bang ngon ngu duoc yeu cau. Yeu cau:\n- Bam sat tu khoa chinh, dat tu khoa o tieu de va doan mo dau.\n- Viet cho nguoi doc that, khong nhoi tu khoa.\n- Dung the HTML don gian: <h2>, <h3>, <p>, <ul>, <li>, <strong>. KHONG dung <h1>.\n- Do dai khoang 800-1200 tu.\n- Khong bia so lieu, khong bia trich dan.\n\nTra ve DUNG dinh dang sau, khong them gi khac:\n\n[TITLE]\n<tieu de bai viet, duoi 60 ky tu>\n[EXCERPT]\n<tom tat 1-2 cau, duoi 155 ky tu>\n[CONTENT]\n<noi dung HTML>` }] },\n  contents: [{ role: 'user', parts: [{ text:\n    `Tu khoa chinh: ${$json.keyword}\\n` +\n    `Goi y tieu de: ${$json.title_hint}\\n` +\n    `Ngon ngu: ${$json.language || 'Tieng Viet'}\\n` +\n    ($json.notes ? `Ghi chu them: ${$json.notes}\\n` : '') +\n    `\\nViet bai theo dung dinh dang da yeu cau.` }] }]\n}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "n011",
+      "name": "AI: Viet bai",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1800,
+        200
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Tách [TITLE] / [EXCERPT] / [CONTENT] từ kết quả AI ===\n//\n// Dùng khối có nhãn thay vì JSON: nội dung bài viết đầy dấu nháy, dấu hai chấm\n// và xuống dòng — những thứ làm vỡ JSON. Nhãn thì không bị ảnh hưởng.\nconst topic = $('DATA: Chong trung va han muc').first().json;\nconst res = $input.first().json;\n\nconst raw = res?.candidates?.[0]?.content?.parts?.[0]?.text || '';\n\nfunction field(label, next) {\n  const re = new RegExp(`\\\\[${label}\\\\]([\\\\s\\\\S]*?)(?=\\\\[${next}\\\\]|$)`, 'i');\n  const m = raw.match(re);\n  return m ? m[1].trim() : '';\n}\n\nconst title = field('TITLE', 'EXCERPT');\nconst excerpt = field('EXCERPT', 'CONTENT');\nconst content = field('CONTENT', 'KHONG_CO_NHAN_NAY');\n\n// Không có tiêu đề hoặc nội dung thì coi như thất bại — đừng đẩy bài rỗng lên\n// WordPress rồi mới phát hiện.\nconst ok = Boolean(title && content);\n\nreturn [{ json: {\n  ...topic,\n  _ai_ok: ok,\n  _ai_error: ok ? '' : 'AI tra ve khong dung dinh dang',\n  post_title: title,\n  post_excerpt: excerpt,\n  post_content: content,\n} }];"
+      },
+      "id": "n012",
+      "name": "DATA: Tach tieu de va noi dung",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json._ai_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "n013",
+      "name": "IF: AI viet duoc khong?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * 4) + 2 }}"
+      },
+      "id": "n014",
+      "name": "WAIT: Gian nhip",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2400,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WP_URL }}/wp-json/wp/v2/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  title: $json.post_title,\n  content: $json.post_content,\n  excerpt: $json.post_excerpt,\n  status: 'draft'\n}) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "n015",
+      "name": "WP: Tao bai nhap",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2600,
+        120
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Xem WordPress có nhận bài không ===\nconst topic = $('DATA: Tach tieu de va noi dung').first().json;\nconst res = $input.first().json;\n\n// WordPress trả về object có id khi tạo thành công.\nconst postId = res?.id || null;\nconst ok = Boolean(postId);\n\nreturn [{ json: {\n  ...topic,\n  _published_ok: ok,\n  wp_post_id: postId || '',\n  wp_edit_url: ok ? `${$env.WP_URL}/wp-admin/post.php?post=${postId}&action=edit` : '',\n  status: ok ? 'draft' : 'failed',\n  error_message: ok ? '' : (res?.message || 'Khong tao duoc bai'),\n  created_at: new Date().toISOString(),\n} }];"
+      },
+      "id": "n016",
+      "name": "DATA: Kiem tra ket qua dang",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.BLOG_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "posts",
+          "mode": "name"
+        },
+        "operation": "append",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "topic_id": "={{ $json.topic_id }}",
+            "keyword": "={{ $json.keyword }}",
+            "post_title": "={{ $json.post_title }}",
+            "wp_post_id": "={{ $json.wp_post_id }}",
+            "wp_edit_url": "={{ $json.wp_edit_url }}",
+            "status": "={{ $json.status }}",
+            "error_message": "={{ $json.error_message }}",
+            "created_at": "={{ $json.created_at }}"
+          }
+        }
+      },
+      "id": "n017",
+      "name": "LOG: Ghi bai da tao",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3000,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=📝 Bài mới chờ duyệt\n\n*{{ $json.post_title }}*\n\nTừ khoá: {{ $json.keyword }}\nTrạng thái: {{ $json.status }}\n\n{{ $json.wp_edit_url }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "n018",
+      "name": "ALERT: Bao co bai cho duyet",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3200,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.BLOG_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "posts",
+          "mode": "name"
+        },
+        "operation": "append",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "topic_id": "={{ $json.topic_id }}",
+            "keyword": "={{ $json.keyword }}",
+            "post_title": "",
+            "wp_post_id": "",
+            "wp_edit_url": "",
+            "status": "={{ $json._skip_reason || 'skipped' }}",
+            "error_message": "",
+            "created_at": "={{ new Date().toISOString() }}"
+          }
+        }
+      },
+      "id": "n019",
+      "name": "LOG: Ghi chu de bo qua",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1800,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.item.json;\nreturn [{ json: {\n  log_id: `ERR-AI-${Date.now()}`,\n  topic_id: d.topic_id || '',\n  error_type: 'ai',\n  error_message: d._ai_error || 'AI khong tra ve noi dung',\n  timestamp: new Date().toISOString(),\n} }];"
+      },
+      "id": "n020",
+      "name": "ERR: Dinh dang loi AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.BLOG_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "errors",
+          "mode": "name"
+        },
+        "operation": "append",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "log_id": "={{ $json.log_id }}",
+            "topic_id": "={{ $json.topic_id }}",
+            "error_type": "={{ $json.error_type }}",
+            "error_message": "={{ $json.error_message }}",
+            "timestamp": "={{ $json.timestamp }}"
+          }
+        }
+      },
+      "id": "n021",
+      "name": "ERR: Ghi log loi AI",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2600,
+        320
+      ]
+    }
+  ],
+  "connections": {
+    "⏰ Lich chay": {
+      "main": [
+        [
+          {
+            "node": "CFG: Doc bang chu de",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CFG: Doc bang chu de": {
+      "main": [
+        [
+          {
+            "node": "CFG: Loc chu de cho viet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CFG: Loc chu de cho viet": {
+      "main": [
+        [
+          {
+            "node": "CFG: Kiem tra chu de",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CFG: Kiem tra chu de": {
+      "main": [
+        [
+          {
+            "node": "IF: Chu de hop le?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Chu de hop le?": {
+      "main": [
+        [
+          {
+            "node": "DATA: Chia tung chu de",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR: Dinh dang loi cau hinh",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR: Dinh dang loi cau hinh": {
+      "main": [
+        [
+          {
+            "node": "ERR: Ghi log loi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DATA: Chia tung chu de": {
+      "main": [
+        [],
+        [
+          {
+            "node": "LOG: Doc bai da viet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Doc bai da viet": {
+      "main": [
+        [
+          {
+            "node": "DATA: Chong trung va han muc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DATA: Chong trung va han muc": {
+      "main": [
+        [
+          {
+            "node": "IF: Co nen viet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Co nen viet?": {
+      "main": [
+        [
+          {
+            "node": "AI: Viet bai",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LOG: Ghi chu de bo qua",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Ghi chu de bo qua": {
+      "main": [
+        [
+          {
+            "node": "DATA: Chia tung chu de",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI: Viet bai": {
+      "main": [
+        [
+          {
+            "node": "DATA: Tach tieu de va noi dung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DATA: Tach tieu de va noi dung": {
+      "main": [
+        [
+          {
+            "node": "IF: AI viet duoc khong?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: AI viet duoc khong?": {
+      "main": [
+        [
+          {
+            "node": "WAIT: Gian nhip",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERR: Dinh dang loi AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR: Dinh dang loi AI": {
+      "main": [
+        [
+          {
+            "node": "ERR: Ghi log loi AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERR: Ghi log loi AI": {
+      "main": [
+        [
+          {
+            "node": "DATA: Chia tung chu de",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WAIT: Gian nhip": {
+      "main": [
+        [
+          {
+            "node": "WP: Tao bai nhap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WP: Tao bai nhap": {
+      "main": [
+        [
+          {
+            "node": "DATA: Kiem tra ket qua dang",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DATA: Kiem tra ket qua dang": {
+      "main": [
+        [
+          {
+            "node": "LOG: Ghi bai da tao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LOG: Ghi bai da tao": {
+      "main": [
+        [
+          {
+            "node": "ALERT: Bao co bai cho duyet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ALERT: Bao co bai cho duyet": {
+      "main": [
+        [
+          {
+            "node": "DATA: Chia tung chu de",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -1,5 +1,6 @@
 const zh = {
   nav: {
+    blog: "博客",
     guide: "指南",
     generators: "提示词生成器",
     sub: {
@@ -22,6 +23,7 @@ const zh = {
     select: "选择语言",
   },
   footer: {
+    blog: "博客",
     guide: "使用指南",
     desc: "用我们前沿的 AI 释放视频的全部潜力，轻松将其转换为详尽的提示词。",
     about: "关于",
@@ -243,6 +245,13 @@ const zh = {
     placeholder: "在此描述你的故事或剧本……",
     generate: "生成故事板",
     result: "故事板",
+  },
+  blog: {
+    title: "博客",
+    subtitle: "关于 AI 视频前期准备的指南与笔记——保持角色一致、写出模型真正听得懂的提示词，把渲染额度花在刀刃上。",
+    empty: "还没有文章，请稍后再来。",
+    readMore: "阅读全文",
+    back: "全部文章",
   },
   guide: {
     title: "使用指南",

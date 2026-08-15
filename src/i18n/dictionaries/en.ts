@@ -1,5 +1,6 @@
 const en = {
   nav: {
+    blog: "Blog",
     guide: "Guide",
     generators: "Prompt Generators",
     sub: {
@@ -22,6 +23,7 @@ const en = {
     select: "Select language",
   },
   footer: {
+    blog: "Blog",
     guide: "User Guide",
     desc: "Unlock the full potential of your videos with our cutting-edge AI, transforming them into detailed prompts effortlessly.",
     about: "About",
@@ -243,6 +245,13 @@ const en = {
     placeholder: "Describe your story or script here...",
     generate: "Generate Storyboard",
     result: "Storyboard",
+  },
+  blog: {
+    title: "Blog",
+    subtitle: "Guides and notes on planning AI video — keeping characters consistent, writing prompts each model follows, and spending render credits well.",
+    empty: "No posts yet. Check back soon.",
+    readMore: "Read more",
+    back: "All posts",
   },
   guide: {
     title: "User guide",

@@ -1,5 +1,6 @@
 const vi = {
   nav: {
+    blog: "Blog",
     guide: "Hướng dẫn",
     generators: "Trình tạo Prompt",
     sub: {
@@ -22,6 +23,7 @@ const vi = {
     select: "Chọn ngôn ngữ",
   },
   footer: {
+    blog: "Blog",
     guide: "Hướng dẫn sử dụng",
     desc: "Mở khóa toàn bộ tiềm năng của video với AI tiên tiến, biến chúng thành các prompt chi tiết một cách dễ dàng.",
     about: "Giới thiệu",
@@ -243,6 +245,13 @@ const vi = {
     placeholder: "Mô tả câu chuyện hoặc kịch bản của bạn tại đây...",
     generate: "Tạo Bảng phân cảnh",
     result: "Bảng phân cảnh",
+  },
+  blog: {
+    title: "Blog",
+    subtitle: "Hướng dẫn và ghi chép về khâu chuẩn bị video AI — giữ nhân vật nhất quán, viết prompt mà model chịu nghe, và tiêu credit render cho đáng.",
+    empty: "Chưa có bài viết nào. Bạn quay lại sau nhé.",
+    readMore: "Đọc tiếp",
+    back: "Tất cả bài viết",
   },
   guide: {
     title: "Hướng dẫn sử dụng",

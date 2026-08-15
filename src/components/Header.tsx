@@ -71,6 +71,9 @@ export default function Header() {
             <Link href="/validator" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.validator")}
             </Link>
+            <Link href="/blog" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              {t("nav.blog")}
+            </Link>
             <Link href="/guide" className="inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors">
               {t("nav.guide")}
             </Link>
@@ -154,6 +157,9 @@ export default function Header() {
             </Link>
             <Link href="/validator" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.validator")}
+            </Link>
+            <Link href="/blog" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
+              {t("nav.blog")}
             </Link>
             <Link href="/guide" className="px-3 py-2 text-sm font-medium text-foreground hover:bg-muted rounded-lg">
               {t("nav.guide")}

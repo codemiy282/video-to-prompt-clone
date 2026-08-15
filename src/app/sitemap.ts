@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/siteUrl";
+import { listPostSlugs } from "@/lib/wordpress";
 
 /**
  * Every route worth indexing, with a priority reflecting what the site is for.
@@ -15,6 +16,7 @@ const ROUTES: { path: string; priority: number; changeFrequency: "monthly" | "ye
   { path: "/", priority: 1.0, changeFrequency: "monthly" },
   // Documentation — the page most likely to earn links.
   { path: "/guide", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/blog", priority: 0.9, changeFrequency: "monthly" },
 
   // Tools. Each one is a distinct search intent.
   { path: "/projects", priority: 0.8, changeFrequency: "monthly" },
@@ -35,15 +37,27 @@ const ROUTES: { path: string; priority: number; changeFrequency: "monthly" | "ye
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Build time. Accurate enough for a site that redeploys on every change, and
   // it avoids claiming a freshness the content does not have.
   const lastModified = new Date();
 
-  return ROUTES.map(({ path, priority, changeFrequency }) => ({
+  const fixed = ROUTES.map(({ path, priority, changeFrequency }) => ({
     url: absoluteUrl(path),
     lastModified,
     changeFrequency,
     priority,
   }));
+
+  // Blog posts carry their own publish date, which is the one lastModified
+  // here that means something. listPostSlugs returns [] when WordPress is
+  // absent or down, so a sitemap is still produced either way.
+  const posts = (await listPostSlugs()).map(({ slug, date }) => ({
+    url: absoluteUrl(`/blog/${slug}`),
+    lastModified: new Date(date),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...fixed, ...posts];
 }
